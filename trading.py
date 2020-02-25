@@ -40,6 +40,14 @@ class Simulation:
     def get_current_price(self):
         return self.price_data[self.index]
 
+    def floating_PL(self):
+        return sum([order.calculate_floating_PL(self.get_current_price())
+                    for order
+                    in self.orders])
+
+    def equity(self):
+        return self.balance + self.floating_PL()
+
     def buy(self, amount):
         new_order = Order(amount, self.get_current_price(), OrderType.BUY)
         self.orders.append(new_order)
@@ -51,11 +59,6 @@ class Simulation:
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.get_current_price())
         self.orders.remove(order)
-
-    def floating_PL(self):
-        return sum([order.calculate_floating_PL(self.get_current_price())
-                    for order
-                    in self.orders])
 
     def advance(self):
         if self.index < len(self.price_data):
@@ -77,6 +80,7 @@ class Simulation:
             f"Bar: {self.index} "
             f"Price: {self.get_current_price()} "
             f"Balance: {self.balance} "
+            f"Equity: {self.equity()} "
             f"Floating PL: {self.floating_PL()}"
         )
 
