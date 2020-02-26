@@ -61,11 +61,13 @@ class Simulation:
         new_order = Order(amount, self.price(), OrderType.BUY)
         self.orders.append(new_order)
         print("BUY")
+        # plt.scatter(self.index, self.price(), color="green")
 
     def sell(self, amount):
         new_order = Order(amount, self.price(), OrderType.SELL)
         self.orders.append(new_order)
         print("SELL")
+        # plt.scatter(self.index, self.price(), color="blue")
 
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
@@ -101,12 +103,14 @@ class Simulation:
             price_above_ma = self.price() - self.ma_record[-1] > 0
             it_wasnt_above_ma = self.price(1) - self.ma_record[-2] <= 0
             if(price_above_ma and it_wasnt_above_ma):
-                self.buy(10)
+                # self.buy(10)
+                self.sell(10)
             # sell
             price_below_ma = self.price() - self.ma_record[-1] < 0
             it_wasnt_below_ma = self.price(1) - self.ma_record[-2] >= 0
             if(price_below_ma and it_wasnt_below_ma):
-                self.sell(10)
+                # self.sell(10)
+                self.buy(10)
 
     def output(self):
         print(
@@ -120,11 +124,11 @@ class Simulation:
 
 if __name__ == "__main__":
     df = pd.read_csv("EURUSD_i_M1_201706131104_202002240839.csv", sep="\t")
-    eur_usd = list(df["<CLOSE>"])[-100000:]
+    eur_usd = list(df["<CLOSE>"])
+    # plt.plot(eur_usd)
     simulation = Simulation(eur_usd, 1000.0)
     while(simulation.advance()):
         pass
-    # plt.plot(eur_usd)
     # plt.plot(simulation.ma_record)
     plt.plot(simulation.balance_record)
     plt.show()
