@@ -29,16 +29,14 @@ class Order:
 
 class Simulation:
 
-    index = 0
-    orders = []
-    price_data = None
-    balance = 0.0
-    ma_record = []
-    balance_record = []
-
-    def __init__(self, price_data, starting_balance):
+    def __init__(self, price_data, starting_balance, ma_length):
+        self.index = 0
+        self.orders = []
+        self.ma_record = []
+        self.balance_record = []
         self.price_data = price_data
         self.balance = starting_balance
+        self.ma_length = ma_length
 
     def price(self, lookback=0):
         return round(self.price_data[self.index - lookback], 5)
@@ -86,7 +84,7 @@ class Simulation:
             return False
 
     def record(self):
-        self.ma_record.append(self.moving_average(10))
+        self.ma_record.append(self.moving_average(self.ma_length))
         self.balance_record.append(self.balance)
 
     def action(self):
@@ -127,9 +125,21 @@ if __name__ == "__main__":
     df = pd.read_csv("EURUSD_i_M1_201706131104_202002240839.csv", sep="\t")
     eur_usd = list(df["<CLOSE>"])[-1000000:]
     # plt.plot(eur_usd)
-    simulation = Simulation(eur_usd, 1000.0)
-    while(simulation.advance()):
+    simulation1 = Simulation(eur_usd, 1000.0, 5)
+    while(simulation1.advance()):
+        pass
+    simulation2 = Simulation(eur_usd, 1000.0, 10)
+    while(simulation2.advance()):
+        pass
+    simulation3 = Simulation(eur_usd, 1000.0, 20)
+    while(simulation3.advance()):
+        pass
+    simulation4 = Simulation(eur_usd, 1000.0, 30)
+    while(simulation4.advance()):
         pass
     # plt.plot(simulation.ma_record)
-    plt.plot(simulation.balance_record)
+    plt.plot(simulation1.balance_record)
+    plt.plot(simulation2.balance_record)
+    plt.plot(simulation3.balance_record)
+    plt.plot(simulation4.balance_record)
     plt.show()
