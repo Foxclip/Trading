@@ -62,8 +62,8 @@ class Simulation:
 
     def advance(self):
         if self.index < len(self.price_data):
-            self.action()
             self.output()
+            self.action()
             self.index += 1
             return True
         else:
