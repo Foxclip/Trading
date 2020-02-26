@@ -22,9 +22,9 @@ class Order:
 
     def calculate_floating_PL(self, price):
         if self.type == OrderType.BUY:
-            return self.amount * (price - self.open_price)
+            return round(self.amount * (price - self.open_price), 5)
         else:
-            return self.amount * (self.open_price - price)
+            return round(self.amount * (self.open_price - price), 5)
 
 
 class Simulation:
@@ -41,15 +41,15 @@ class Simulation:
         self.balance = starting_balance
 
     def price(self, lookback=0):
-        return self.price_data[self.index - lookback]
+        return round(self.price_data[self.index - lookback], 5)
 
     def floating_PL(self):
-        return sum([order.calculate_floating_PL(self.price())
-                    for order
-                    in self.orders])
+        return round(sum([order.calculate_floating_PL(self.price())
+                          for order
+                          in self.orders]), 5)
 
     def equity(self):
-        return self.balance + self.floating_PL()
+        return round(self.balance + self.floating_PL(), 5)
 
     def moving_average(self, length):
         if(self.index < length):
@@ -71,6 +71,7 @@ class Simulation:
 
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
+        self.balance = round(self.balance, 5)
         self.orders.remove(order)
         print("CLOSE")
 
@@ -95,9 +96,9 @@ class Simulation:
             it_was_above_ma = self.price(1) - self.ma_record[-2] > 0
             price_not_below_ma = self.price() - self.ma_record[-1] >= 0
             it_was_below_ma = self.price(1) - self.ma_record[-2] < 0
-            cross_from_above = price_not_above_ma and it_was_above_ma
-            cross_from_below = price_not_below_ma and it_was_below_ma
-            if(cross_from_above or cross_from_below):
+            cross_above = price_not_above_ma and it_was_above_ma
+            cross_below = price_not_below_ma and it_was_below_ma
+            if((len(self.orders) > 0) and (cross_above or cross_below)):
                 self.close_order(self.orders[0])
             # buy
             price_above_ma = self.price() - self.ma_record[-1] > 0
@@ -124,7 +125,7 @@ class Simulation:
 
 if __name__ == "__main__":
     df = pd.read_csv("EURUSD_i_M1_201706131104_202002240839.csv", sep="\t")
-    eur_usd = list(df["<CLOSE>"])
+    eur_usd = list(df["<CLOSE>"])[-1000000:]
     # plt.plot(eur_usd)
     simulation = Simulation(eur_usd, 1000.0)
     while(simulation.advance()):
