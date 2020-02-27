@@ -4,6 +4,17 @@ import enum
 from statistics import mean
 
 
+def to_curr(amount, precision):
+    return amount * 10**precision
+
+
+def from_curr(object, precision):
+    if isinstance(object, int):
+        return object / 10**precision
+    elif isinstance(object, list):
+        return [x / 10**precision for x in object]
+
+
 class OrderType(enum.Enum):
     BUY = 0
     SELL = 1
@@ -12,8 +23,8 @@ class OrderType(enum.Enum):
 class Order:
 
     type = None
-    amount = 0.0
-    open_price = 0.0
+    amount = 0
+    open_price = 0
 
     def __init__(self, amount, price, type):
         self.amount = amount
@@ -22,9 +33,9 @@ class Order:
 
     def calculate_floating_PL(self, price):
         if self.type == OrderType.BUY:
-            return round(self.amount * (price - self.open_price), 5)
+            return self.amount * (price - self.open_price)
         else:
-            return round(self.amount * (self.open_price - price), 5)
+            return self.amount * (self.open_price - price)
 
 
 class Simulation:
@@ -39,15 +50,15 @@ class Simulation:
         self.ma_length = ma_length
 
     def price(self, lookback=0):
-        return round(self.price_data[self.index - lookback], 5)
+        return self.price_data[self.index - lookback]
 
     def floating_PL(self):
-        return round(sum([order.calculate_floating_PL(self.price())
-                          for order
-                          in self.orders]), 5)
+        return sum([order.calculate_floating_PL(self.price())
+                    for order
+                    in self.orders])
 
     def equity(self):
-        return round(self.balance + self.floating_PL(), 5)
+        return self.balance + self.floating_PL()
 
     def moving_average(self, length):
         if(self.index < length):
@@ -69,7 +80,6 @@ class Simulation:
 
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
-        self.balance = round(self.balance, 5)
         self.orders.remove(order)
         print("CLOSE")
 
@@ -114,32 +124,22 @@ class Simulation:
     def output(self):
         print(
             f"Bar: {self.index} "
-            f"Price: {self.price()} "
-            f"Balance: {self.balance} "
-            f"Equity: {self.equity()} "
-            f"FPL: {self.floating_PL()} "
+            f"Price: {from_curr(self.price(), 5)} "
+            f"Balance: {from_curr(self.balance, 5)} "
+            f"Equity: {from_curr(self.equity(), 5)} "
+            f"FPL: {from_curr(self.floating_PL(), 5)} "
         )
 
 
 if __name__ == "__main__":
     df = pd.read_csv("EURUSD_i_M1_201706131104_202002240839.csv", sep="\t")
-    eur_usd = list(df["<CLOSE>"])[-1000000:]
+    precision = 5
+    eur_usd = [int(round(x * 10**precision, 0))
+               for x in list(df["<CLOSE>"])[-10000:]]
     # plt.plot(eur_usd)
-    simulation1 = Simulation(eur_usd, 1000.0, 5)
+    simulation1 = Simulation(eur_usd, to_curr(1000, precision), 10)
     while(simulation1.advance()):
         pass
-    simulation2 = Simulation(eur_usd, 1000.0, 10)
-    while(simulation2.advance()):
-        pass
-    simulation3 = Simulation(eur_usd, 1000.0, 20)
-    while(simulation3.advance()):
-        pass
-    simulation4 = Simulation(eur_usd, 1000.0, 30)
-    while(simulation4.advance()):
-        pass
     # plt.plot(simulation.ma_record)
-    plt.plot(simulation1.balance_record)
-    plt.plot(simulation2.balance_record)
-    plt.plot(simulation3.balance_record)
-    plt.plot(simulation4.balance_record)
+    plt.plot(from_curr(simulation1.balance_record, precision))
     plt.show()
