@@ -40,7 +40,7 @@ class Order:
 
 class Simulation:
 
-    def __init__(self, price_data, starting_balance, ma_length):
+    def __init__(self, price_data, starting_balance, ma_length, precision):
         self.index = 0
         self.orders = []
         self.ma_record = []
@@ -48,6 +48,7 @@ class Simulation:
         self.price_data = price_data
         self.balance = starting_balance
         self.ma_length = ma_length
+        self.precision = precision
 
     def price(self, lookback=0):
         return self.price_data[self.index - lookback]
@@ -124,10 +125,10 @@ class Simulation:
     def output(self):
         print(
             f"Bar: {self.index} "
-            f"Price: {from_curr(self.price(), 5)} "
-            f"Balance: {from_curr(self.balance, 5)} "
-            f"Equity: {from_curr(self.equity(), 5)} "
-            f"FPL: {from_curr(self.floating_PL(), 5)} "
+            f"Price: {from_curr(self.price(), self.precision)} "
+            f"Balance: {from_curr(self.balance, self.precision)} "
+            f"Equity: {from_curr(self.equity(), self.precision)} "
+            f"FPL: {from_curr(self.floating_PL(), self.precision)} "
         )
 
 
@@ -137,7 +138,7 @@ if __name__ == "__main__":
     eur_usd = [int(round(x * 10**precision, 0))
                for x in list(df["<CLOSE>"])[-10000:]]
     # plt.plot(eur_usd)
-    simulation1 = Simulation(eur_usd, to_curr(1000, precision), 10)
+    simulation1 = Simulation(eur_usd, to_curr(1000, precision), 10, precision)
     while(simulation1.advance()):
         pass
     # plt.plot(simulation.ma_record)
