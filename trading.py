@@ -56,7 +56,7 @@ class Simulation:
 
     def __init__(self, price_data, ask_price_data, bid_price_data,
                  starting_balance, ma_length, precision, ignore_spread=False,
-                 put_stops=False):
+                 put_stops=False, sl_range=20, tp_range=20):
         self.index = 0
         self.orders = []
         self.ma_record = []
@@ -69,6 +69,8 @@ class Simulation:
         self.precision = precision
         self.ignore_spread = ignore_spread
         self.put_stops = put_stops
+        self.sl_range = sl_range
+        self.tp_range = tp_range
 
     def price(self, lookback=0):
         return self.price_data[self.index - lookback]
@@ -99,7 +101,10 @@ class Simulation:
                           stop_loss, take_profit)
         self.orders.append(new_order)
         print("BUY")
-        # plt.scatter(self.index, self.price(), color="green")
+        if plot_orders:
+            plt.scatter(self.index, self.price(), color="green")
+            if not self.ignore_spread:
+                plt.scatter(self.index, price, color="green")
 
     def sell(self, amount, stop_loss=0, take_profit=0):
         price = self.price() if self.ignore_spread else self.bid_price()
@@ -107,13 +112,15 @@ class Simulation:
                           stop_loss, take_profit)
         self.orders.append(new_order)
         print("SELL")
-        # plt.scatter(self.index, self.price(), color="blue")
+        if plot_orders:
+            plt.scatter(self.index, price, color="blue")
 
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
         self.orders.remove(order)
         print("CLOSE")
-        # plt.scatter(self.index, self.price(), color="black")
+        if plot_orders:
+            plt.scatter(self.index, self.price(), color="black")
 
     def advance(self):
         if self.index < len(self.price_data):
@@ -141,51 +148,39 @@ class Simulation:
                 print("___SLTP___")
 
     def action(self):
-        sl_range = 20
-        tp_range = 20
         if(self.index > 0):
             # close
-            price_not_above_ma = self.price() - self.ma_record[-1] <= 0
-            it_was_above_ma = self.price(1) - self.ma_record[-2] > 0
-            price_not_below_ma = self.price() - self.ma_record[-1] >= 0
-            it_was_below_ma = self.price(1) - self.ma_record[-2] < 0
-            cross_above = price_not_above_ma and it_was_above_ma
-            cross_below = price_not_below_ma and it_was_below_ma
-            if((len(self.orders) > 0) and (cross_above or cross_below)):
-                self.close_order(self.orders[0])
-            # buy
-            price_above_ma = self.price() - self.ma_record[-1] > 0
-            it_wasnt_above_ma = self.price(1) - self.ma_record[-2] <= 0
-            if(price_above_ma and it_wasnt_above_ma):
-                # self.buy(10)
-                if self.put_stops:
-                    self.sell(10,
-                              stop_loss=self.price() + sl_range,
-                              take_profit=self.price() - tp_range)
-                else:
-                    self.sell(10)
-                # self.buy(10,
-                #          stop_loss=self.price() - 20,
-                #          take_profit=self.price() + 20)
+            if not self.put_stops:
+                price_not_above_ma = self.price() - self.ma_record[-1] <= 0
+                it_was_above_ma = self.price(1) - self.ma_record[-2] > 0
+                price_not_below_ma = self.price() - self.ma_record[-1] >= 0
+                it_was_below_ma = self.price(1) - self.ma_record[-2] < 0
+                cross_above = price_not_above_ma and it_was_above_ma
+                cross_below = price_not_below_ma and it_was_below_ma
+                if((len(self.orders) > 0) and (cross_above or cross_below)):
+                    self.close_order(self.orders[0])
             # sell
-            price_below_ma = self.price() - self.ma_record[-1] < 0
-            it_wasnt_below_ma = self.price(1) - self.ma_record[-2] >= 0
-            if(price_below_ma and it_wasnt_below_ma):
-                # self.sell(10)
-                if(self.put_stops):
-                    self.buy(10,
-                             stop_loss=self.price() - sl_range,
-                             take_profit=self.price() + tp_range)
-                else:
-                    self.buy(10)
-                # self.sell(10,
-                #           stop_loss=self.price() + 20,
-                #           take_profit=self.price() - 20)
-
-        # if self.index == 28:
-        #     self.buy(10, stop_loss=108170, take_profit=108190)
-        # if self.index == 28:
-        #     self.sell(10, stop_loss=0, take_profit=108170)
+            if len(self.orders) == 0 or not self.put_stops:
+                price_above_ma = self.price() - self.ma_record[-1] > 0
+                it_wasnt_above_ma = self.price(1) - self.ma_record[-2] <= 0
+                if(price_above_ma and it_wasnt_above_ma):
+                    if self.put_stops:
+                        self.sell(10,
+                                  stop_loss=self.price() + self.sl_range,
+                                  take_profit=self.price() - self.tp_range)
+                    else:
+                        self.sell(10)
+            # buy
+            if len(self.orders) == 0 or not self.put_stops:
+                price_below_ma = self.price() - self.ma_record[-1] < 0
+                it_wasnt_below_ma = self.price(1) - self.ma_record[-2] >= 0
+                if(price_below_ma and it_wasnt_below_ma):
+                    if(self.put_stops):
+                        self.buy(10,
+                                 stop_loss=self.price() - self.sl_range,
+                                 take_profit=self.price() + self.tp_range)
+                    else:
+                        self.buy(10)
 
     def output(self):
         print(
@@ -199,8 +194,9 @@ class Simulation:
 
 if __name__ == "__main__":
     df = pd.read_csv("EURUSD_i_M1_201706131104_202002240839.csv", sep="\t")
+    plot_orders = False
     precision = 5
-    amount = 10000
+    amount = 100000
     eur_usd = [to_curr(x, precision) for x in list(df["<CLOSE>"])][-amount:]
     eur_usd_ask = []
     eur_usd_bid = []
@@ -212,15 +208,28 @@ if __name__ == "__main__":
         eur_usd_bid.append(eur_usd[bar_i] - spread_add)
     simulation1 = Simulation(eur_usd, eur_usd_ask, eur_usd_bid,
                              to_curr(1000, precision), 10, precision,
-                             ignore_spread=False, put_stops=False)
+                             ignore_spread=False, put_stops=True,
+                             sl_range=20, tp_range=20)
     simulation2 = Simulation(eur_usd, eur_usd_ask, eur_usd_bid,
                              to_curr(1000, precision), 10, precision,
-                             ignore_spread=False, put_stops=True)
+                             ignore_spread=False, put_stops=True,
+                             sl_range=20, tp_range=60)
+    simulation3 = Simulation(eur_usd, eur_usd_ask, eur_usd_bid,
+                             to_curr(1000, precision), 10, precision,
+                             ignore_spread=False, put_stops=True,
+                             sl_range=100, tp_range=300)
     simulation1.run()
     simulation2.run()
-    # plt.plot(eur_usd)
-    # plt.plot(simulation.ma_record)
-    plt.plot(from_curr(simulation1.balance_record, precision))
-    plt.plot(from_curr(simulation2.balance_record, precision))
-    # plt.plot(from_curr(simulation2.balance_record, precision))
+    simulation3.run()
+    if plot_orders:
+        plt.plot(eur_usd)
+        plt.plot(simulation1.ma_record)
+    else:
+        balance_record1 = from_curr(simulation1.balance_record, precision)
+        plt.plot(balance_record1, label="20 20")
+        balance_record2 = from_curr(simulation2.balance_record, precision)
+        plt.plot(balance_record2, label="20 60")
+        balance_record3 = from_curr(simulation3.balance_record, precision)
+        plt.plot(balance_record3, label="100 300")
+    plt.legend(loc="upper right")
     plt.show()
