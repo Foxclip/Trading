@@ -1,202 +1,18 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import enum
-from statistics import mean
 import math
-
-
-def to_curr(amount, precision):
-    return int(round(amount * 10**precision))
-
-
-def from_curr(object, precision):
-    if isinstance(object, int):
-        return object / 10**precision
-    elif isinstance(object, list):
-        return [x / 10**precision for x in object]
-
-
-class OrderType(enum.Enum):
-    BUY = 0
-    SELL = 1
-
-
-class Order:
-
-    def __init__(self, amount, price, type, stop_loss=0, take_profit=0):
-        self.amount = amount
-        self.open_price = price
-        self.type = type
-        self.stop_loss = stop_loss
-        self.take_profit = take_profit
-
-    def calculate_floating_PL(self, price):
-        if self.type == OrderType.BUY:
-            return self.amount * (price - self.open_price)
-        else:
-            return self.amount * (self.open_price - price)
-
-    def should_close(self, price):
-        SL_hit = False
-        TP_hit = False
-        if self.type == OrderType.BUY:
-            SL_hit = (self.stop_loss > 0 and price <= self.stop_loss)
-            TP_hit = (self.take_profit > 0 and price >= self.take_profit)
-        elif self.type == OrderType.SELL:
-            SL_hit = (self.stop_loss > 0 and price >= self.stop_loss)
-            TP_hit = (self.take_profit > 0 and price <= self.take_profit)
-        if(SL_hit):
-            print("SL_hit")
-        if(TP_hit):
-            print("TP_hit")
-        return SL_hit or TP_hit
-
-
-class Simulation:
-
-    def __init__(self, price_data, ask_price_data, bid_price_data,
-                 starting_balance, ma_length, precision, ignore_spread=False,
-                 put_stops=False, sl_range=20, tp_range=20):
-        self.index = 0
-        self.orders = []
-        self.ma_record = []
-        self.balance_record = []
-        self.price_data = price_data
-        self.ask_price_data = ask_price_data
-        self.bid_price_data = bid_price_data
-        self.balance = starting_balance
-        self.ma_length = ma_length
-        self.precision = precision
-        self.ignore_spread = ignore_spread
-        self.put_stops = put_stops
-        self.sl_range = sl_range
-        self.tp_range = tp_range
-
-    def price(self, lookback=0):
-        return self.price_data[self.index - lookback]
-
-    def ask_price(self, lookback=0):
-        return self.ask_price_data[self.index - lookback]
-
-    def bid_price(self, lookback=0):
-        return self.bid_price_data[self.index - lookback]
-
-    def floating_PL(self):
-        return sum([order.calculate_floating_PL(self.price())
-                    for order
-                    in self.orders])
-
-    def equity(self):
-        return self.balance + self.floating_PL()
-
-    def moving_average(self, length):
-        if(self.index < length):
-            return mean(self.price_data[0:self.index + 1])
-        else:
-            return mean(self.price_data[self.index - length:self.index + 1])
-
-    def buy(self, amount, stop_loss=0, take_profit=0):
-        price = self.price() if self.ignore_spread else self.ask_price()
-        new_order = Order(amount, price, OrderType.BUY,
-                          stop_loss, take_profit)
-        self.orders.append(new_order)
-        print("BUY")
-        if plot_orders:
-            plt.scatter(self.index, self.price(), color="green")
-            if not self.ignore_spread:
-                plt.scatter(self.index, price, color="green")
-
-    def sell(self, amount, stop_loss=0, take_profit=0):
-        price = self.price() if self.ignore_spread else self.bid_price()
-        new_order = Order(amount, price, OrderType.SELL,
-                          stop_loss, take_profit)
-        self.orders.append(new_order)
-        print("SELL")
-        if plot_orders:
-            plt.scatter(self.index, price, color="blue")
-
-    def close_order(self, order):
-        self.balance += order.calculate_floating_PL(self.price())
-        self.orders.remove(order)
-        print("CLOSE")
-        if plot_orders:
-            plt.scatter(self.index, self.price(), color="black")
-
-    def advance(self):
-        if self.index < len(self.price_data):
-            self.record()
-            self.output()
-            self.SLTP()
-            self.action()
-            self.index += 1
-            return True
-        else:
-            return False
-
-    def run(self):
-        while(self.advance()):
-            pass
-
-    def record(self):
-        self.ma_record.append(self.moving_average(self.ma_length))
-        self.balance_record.append(self.balance)
-
-    def SLTP(self):
-        for order_i in range(len(self.orders) - 1, -1, -1):
-            if(self.orders[order_i].should_close(self.price())):
-                self.close_order(self.orders[order_i])
-                print("___SLTP___")
-
-    def action(self):
-        if(self.index > 0):
-            # close
-            if not self.put_stops:
-                price_not_above_ma = self.price() - self.ma_record[-1] <= 0
-                it_was_above_ma = self.price(1) - self.ma_record[-2] > 0
-                price_not_below_ma = self.price() - self.ma_record[-1] >= 0
-                it_was_below_ma = self.price(1) - self.ma_record[-2] < 0
-                cross_above = price_not_above_ma and it_was_above_ma
-                cross_below = price_not_below_ma and it_was_below_ma
-                if((len(self.orders) > 0) and (cross_above or cross_below)):
-                    self.close_order(self.orders[0])
-            # sell
-            if len(self.orders) == 0 or not self.put_stops:
-                price_above_ma = self.price() - self.ma_record[-1] > 0
-                it_wasnt_above_ma = self.price(1) - self.ma_record[-2] <= 0
-                if(price_above_ma and it_wasnt_above_ma):
-                    if self.put_stops:
-                        self.sell(10,
-                                  stop_loss=self.price() + self.sl_range,
-                                  take_profit=self.price() - self.tp_range)
-                    else:
-                        self.sell(10)
-            # buy
-            if len(self.orders) == 0 or not self.put_stops:
-                price_below_ma = self.price() - self.ma_record[-1] < 0
-                it_wasnt_below_ma = self.price(1) - self.ma_record[-2] >= 0
-                if(price_below_ma and it_wasnt_below_ma):
-                    if(self.put_stops):
-                        self.buy(10,
-                                 stop_loss=self.price() - self.sl_range,
-                                 take_profit=self.price() + self.tp_range)
-                    else:
-                        self.buy(10)
-
-    def output(self):
-        print(
-            f"Bar: {self.index} "
-            f"Price: {from_curr(self.price(), self.precision)} "
-            f"Balance: {from_curr(self.balance, self.precision)} "
-            f"Equity: {from_curr(self.equity(), self.precision)} "
-            f"FPL: {from_curr(self.floating_PL(), self.precision)} "
-        )
+import simulation
+from simulation import from_curr, to_curr, Simulation
 
 
 if __name__ == "__main__":
     df = pd.read_csv("EURUSD_i_M1_201706131104_202002240839.csv", sep="\t")
     plot_orders = False
     precision = 5
-    amount = 100000
+    amount = 10000
+    simulation.plot_orders = plot_orders
+    simulation.precision = precision
+    simulation.amount = amount
     eur_usd = [to_curr(x, precision) for x in list(df["<CLOSE>"])][-amount:]
     eur_usd_ask = []
     eur_usd_bid = []
@@ -209,27 +25,30 @@ if __name__ == "__main__":
     simulation1 = Simulation(eur_usd, eur_usd_ask, eur_usd_bid,
                              to_curr(1000, precision), 10, precision,
                              ignore_spread=False, put_stops=True,
-                             sl_range=20, tp_range=20)
+                             sl_range=100, tp_range=400, name="100_400")
     simulation2 = Simulation(eur_usd, eur_usd_ask, eur_usd_bid,
                              to_curr(1000, precision), 10, precision,
                              ignore_spread=False, put_stops=True,
-                             sl_range=20, tp_range=60)
+                             sl_range=100, tp_range=500, name="100_500")
     simulation3 = Simulation(eur_usd, eur_usd_ask, eur_usd_bid,
                              to_curr(1000, precision), 10, precision,
                              ignore_spread=False, put_stops=True,
-                             sl_range=100, tp_range=300)
+                             sl_range=100, tp_range=600, name="100_600")
     simulation1.run()
     simulation2.run()
     simulation3.run()
+    print(f"Sim 1 order count: {simulation1.order_count}")
+    print(f"Sim 2 order count: {simulation2.order_count}")
+    print(f"Sim 3 order count: {simulation3.order_count}")
     if plot_orders:
         plt.plot(eur_usd)
         plt.plot(simulation1.ma_record)
     else:
         balance_record1 = from_curr(simulation1.balance_record, precision)
-        plt.plot(balance_record1, label="20 20")
+        plt.plot(balance_record1, label=simulation1.name)
         balance_record2 = from_curr(simulation2.balance_record, precision)
-        plt.plot(balance_record2, label="20 60")
+        plt.plot(balance_record2, label=simulation2.name)
         balance_record3 = from_curr(simulation3.balance_record, precision)
-        plt.plot(balance_record3, label="100 300")
+        plt.plot(balance_record3, label=simulation3.name)
     plt.legend(loc="upper right")
     plt.show()
