@@ -1,10 +1,15 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 import enum
 from statistics import mean
+import math
 
 plot_orders = False
 precision = 5
 amount = 1000000
+price_data = None
+ask_data = None
+bid_data = None
 
 
 def to_curr(amount, precision):
@@ -16,6 +21,25 @@ def from_curr(object, precision):
         return object / 10**precision
     elif isinstance(object, list):
         return [x / 10**precision for x in object]
+
+
+def load_file(path):
+
+    print("Reading CSV")
+    df = pd.read_csv(path, sep="\t")
+
+    print("Generating bid/ask data")
+    price_data_raw = list(df["<CLOSE>"])
+    global price_data, ask_data, bid_data
+    price_data = [to_curr(x, precision) for x in price_data_raw][-amount:]
+    ask_data = []
+    bid_data = []
+    for bar_i in range(len(price_data)):
+        price = price_data[bar_i]
+        spread = df["<SPREAD>"][bar_i]
+        spread_half = math.ceil(spread / 2)
+        ask_data.append(price + spread_half)
+        bid_data.append(price - spread_half)
 
 
 class OrderType(enum.Enum):
@@ -56,20 +80,15 @@ class Order:
 
 class Simulation:
 
-    def __init__(self, price_data, ask_price_data, bid_price_data,
-                 starting_balance, ma_length, precision, ignore_spread=False,
+    def __init__(self, starting_balance=0, ma_length=10, ignore_spread=False,
                  put_stops=False, sl_range=20, tp_range=20, name="Untitled"):
         self.index = 0
         self.orders = []
         self.order_count = 0
         self.ma_record = []
         self.balance_record = []
-        self.price_data = price_data
-        self.ask_price_data = ask_price_data
-        self.bid_price_data = bid_price_data
-        self.balance = starting_balance
+        self.balance = to_curr(starting_balance, precision)
         self.ma_length = ma_length
-        self.precision = precision
         self.ignore_spread = ignore_spread
         self.put_stops = put_stops
         self.sl_range = sl_range
@@ -77,13 +96,13 @@ class Simulation:
         self.name = name
 
     def price(self, lookback=0):
-        return self.price_data[self.index - lookback]
+        return price_data[self.index - lookback]
 
     def ask_price(self, lookback=0):
-        return self.ask_price_data[self.index - lookback]
+        return ask_data[self.index - lookback]
 
     def bid_price(self, lookback=0):
-        return self.bid_price_data[self.index - lookback]
+        return bid_data[self.index - lookback]
 
     def floating_PL(self):
         return sum([order.calculate_floating_PL(self.price())
@@ -95,9 +114,9 @@ class Simulation:
 
     def moving_average(self, length):
         if(self.index < length):
-            return mean(self.price_data[0:self.index + 1])
+            return mean(price_data[0:self.index + 1])
         else:
-            return mean(self.price_data[self.index - length:self.index + 1])
+            return mean(price_data[self.index - length:self.index + 1])
 
     def buy(self, amount, stop_loss=0, take_profit=0):
         price = self.price() if self.ignore_spread else self.ask_price()
@@ -129,7 +148,7 @@ class Simulation:
             plt.scatter(self.index, self.price(), color="black")
 
     def advance(self):
-        if self.index < len(self.price_data):
+        if self.index < len(price_data):
             self.record()
             self.output()
             self.SLTP()
@@ -192,8 +211,8 @@ class Simulation:
         print(
             f"Name: {self.name} "
             f"Bar: {self.index} "
-            f"Price: {from_curr(self.price(), self.precision)} "
-            f"Balance: {from_curr(self.balance, self.precision)} "
-            f"Equity: {from_curr(self.equity(), self.precision)} "
-            f"FPL: {from_curr(self.floating_PL(), self.precision)} "
+            f"Price: {from_curr(self.price(), precision)} "
+            f"Balance: {from_curr(self.balance, precision)} "
+            f"Equity: {from_curr(self.equity(), precision)} "
+            f"FPL: {from_curr(self.floating_PL(), precision)} "
         )
