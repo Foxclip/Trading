@@ -10,6 +10,7 @@ amount = 1000000
 price_data = None
 ask_data = None
 bid_data = None
+simulations = []
 
 
 def to_curr(amount, precision):
@@ -40,6 +41,18 @@ def load_file(path):
         spread_half = math.ceil(spread / 2)
         ask_data.append(price + spread_half)
         bid_data.append(price - spread_half)
+
+
+def add_from_template(template):
+    new_sim = Simulation()
+    for key in template.keys():
+        setattr(new_sim, key, template[key])
+    simulations.append(new_sim)
+
+
+def run_all():
+    for sim in simulations:
+        sim.run()
 
 
 class OrderType(enum.Enum):
@@ -80,14 +93,14 @@ class Order:
 
 class Simulation:
 
-    def __init__(self, starting_balance=0, ma_length=10, ignore_spread=False,
+    def __init__(self, balance=0, ma_length=10, ignore_spread=False,
                  put_stops=False, sl_range=20, tp_range=20, name="Untitled"):
         self.index = 0
         self.orders = []
         self.order_count = 0
         self.ma_record = []
         self.balance_record = []
-        self.balance = to_curr(starting_balance, precision)
+        self.balance = to_curr(balance, precision)
         self.ma_length = ma_length
         self.ignore_spread = ignore_spread
         self.put_stops = put_stops
