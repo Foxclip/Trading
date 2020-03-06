@@ -5,6 +5,7 @@ import math
 
 precision = 5
 amount = 1000000
+lot_size = 100000
 price_data = None
 ask_data = None
 bid_data = None
@@ -12,7 +13,10 @@ simulations = []
 
 
 def to_curr(amount, precision):
-    return int(round(amount * 10**precision))
+    if isinstance(amount, float):
+        return int(round(amount * 10**precision))
+    else:
+        raise Exception(f"{type(amount)} should not be in to_curr")
 
 
 def from_curr(object, precision):
@@ -20,6 +24,12 @@ def from_curr(object, precision):
         return object / 10**precision
     elif isinstance(object, list):
         return [x / 10**precision for x in object]
+    else:
+        raise Exception(f"{type(object)} should not be in from_curr")
+
+
+def calculate_margin(amount, price, leverage):
+    return int(amount * from_curr(price, precision)) // leverage
 
 
 def load_file(path):
@@ -60,18 +70,23 @@ class OrderType(enum.Enum):
 
 class Order:
 
-    def __init__(self, amount, price, type, stop_loss=0, take_profit=0):
+    def __init__(self, amount, open_price, type, stop_loss=0, take_profit=0):
         self.amount = amount
-        self.open_price = price
+        self.open_price = open_price
         self.type = type
         self.stop_loss = stop_loss
         self.take_profit = take_profit
 
     def calculate_floating_PL(self, price):
+        pricediff = 0
         if self.type == OrderType.BUY:
-            return self.amount * (price - self.open_price)
+            pricediff = price - self.open_price
         else:
-            return self.amount * (self.open_price - price)
+            pricediff = self.open_price - price
+        return int(self.amount * from_curr(pricediff, precision))
+
+    def margin(self, price, leverage):
+        return calculate_margin(self.amount, price, leverage)
 
     def should_close(self, price):
         SL_hit = False
@@ -91,8 +106,9 @@ class Order:
 
 class Simulation:
 
-    def __init__(self, balance=0, ma_length=10, ignore_spread=False,
-                 put_stops=False, sl_range=20, tp_range=20, name="Untitled"):
+    def __init__(self, balance=0.0, ma_length=10, ignore_spread=False,
+                 put_stops=False, sl_range=20, tp_range=20, leverage=500,
+                 name="Untitled"):
         self.index = 0
         self.orders = []
         self.ma_record = []
@@ -104,6 +120,7 @@ class Simulation:
         self.sl_range = sl_range
         self.tp_range = tp_range
         self.name = name
+        self.leverage = leverage
 
     def price(self, lookback=0):
         return price_data[self.index - lookback]
@@ -128,19 +145,35 @@ class Simulation:
         else:
             return mean(price_data[self.index - length:self.index + 1])
 
-    def buy(self, amount, stop_loss=0, take_profit=0):
-        price = self.price() if self.ignore_spread else self.ask_price()
-        new_order = Order(amount, price, OrderType.BUY,
-                          stop_loss, take_profit)
-        self.orders.append(new_order)
-        print("BUY")
+    def used_margin(self):
+        return sum([order.margin(self.price(), self.leverage)
+                    for order
+                    in self.orders])
 
-    def sell(self, amount, stop_loss=0, take_profit=0):
-        price = self.price() if self.ignore_spread else self.bid_price()
-        new_order = Order(amount, price, OrderType.SELL,
-                          stop_loss, take_profit)
+    def free_margin(self):
+        return self.equity() - self.used_margin()
+
+    def _buy_or_sell(self, lots, stop_loss, take_profit, order_type):
+        if order_type == OrderType.BUY:
+            bid_or_ask_price = self.ask_price()
+            str = "BUY"
+        elif order_type == OrderType.SELL:
+            bid_or_ask_price = self.bid_price()
+            str = "SELL"
+        price = self.price() if self.ignore_spread else bid_or_ask_price
+        amount = to_curr(lots * lot_size, precision)
+        margin = calculate_margin(amount, price, self.leverage)
+        if margin > self.free_margin():
+            raise Exception(f"Not enough free margin to {str}")
+        new_order = Order(amount, price, order_type, stop_loss, take_profit)
         self.orders.append(new_order)
-        print("SELL")
+        print(str)
+
+    def buy(self, lots, stop_loss=0, take_profit=0):
+        self._buy_or_sell(lots, stop_loss, take_profit, OrderType.BUY)
+
+    def sell(self, lots, stop_loss=0, take_profit=0):
+        self._buy_or_sell(lots, stop_loss, take_profit, OrderType.SELL)
 
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
@@ -190,22 +223,22 @@ class Simulation:
                 it_wasnt_above_ma = self.price(1) - self.ma_record[-2] <= 0
                 if(price_above_ma and it_wasnt_above_ma):
                     if self.put_stops:
-                        self.sell(10,
+                        self.sell(0.01,
                                   stop_loss=self.price() + self.sl_range,
                                   take_profit=self.price() - self.tp_range)
                     else:
-                        self.sell(10)
+                        self.sell(0.01)
             # buy
             if len(self.orders) == 0 or not self.put_stops:
                 price_below_ma = self.price() - self.ma_record[-1] < 0
                 it_wasnt_below_ma = self.price(1) - self.ma_record[-2] >= 0
                 if(price_below_ma and it_wasnt_below_ma):
                     if(self.put_stops):
-                        self.buy(10,
+                        self.buy(0.01,
                                  stop_loss=self.price() - self.sl_range,
                                  take_profit=self.price() + self.tp_range)
                     else:
-                        self.buy(10)
+                        self.buy(0.01)
 
     def output(self):
         print(
@@ -215,4 +248,6 @@ class Simulation:
             f"Balance: {from_curr(self.balance, precision)} "
             f"Equity: {from_curr(self.equity(), precision)} "
             f"FPL: {from_curr(self.floating_PL(), precision)} "
+            f"um: {from_curr(self.used_margin(), precision)} "
+            f"fm: {from_curr(self.free_margin(), precision)}"
         )

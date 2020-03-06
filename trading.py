@@ -7,19 +7,20 @@ if __name__ == "__main__":
 
     # settings
     simulation.precision = 5
-    simulation.amount = 10000
+    simulation.amount = 100000
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
 
     # creating simulations
     main_template = {
-        "balance": to_curr(1000, simulation.precision),
+        "balance": to_curr(1000.0, simulation.precision),
         "ma_length": 15,
         "ignore_spread": False,
         "put_stops": True,
         "sl_range": 100,
         "tp_range": 500,
+        "leverage": 500,
         "name": "Untitled"
     }
     template = main_template.copy()
