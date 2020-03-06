@@ -1,10 +1,8 @@
-import matplotlib.pyplot as plt
 import pandas as pd
 import enum
 from statistics import mean
 import math
 
-plot_orders = False
 precision = 5
 amount = 1000000
 price_data = None
@@ -97,7 +95,6 @@ class Simulation:
                  put_stops=False, sl_range=20, tp_range=20, name="Untitled"):
         self.index = 0
         self.orders = []
-        self.order_count = 0
         self.ma_record = []
         self.balance_record = []
         self.balance = to_curr(balance, precision)
@@ -137,11 +134,6 @@ class Simulation:
                           stop_loss, take_profit)
         self.orders.append(new_order)
         print("BUY")
-        if plot_orders:
-            plt.scatter(self.index, self.price(), color="green")
-            if not self.ignore_spread:
-                plt.scatter(self.index, price, color="green")
-        self.order_count += 1
 
     def sell(self, amount, stop_loss=0, take_profit=0):
         price = self.price() if self.ignore_spread else self.bid_price()
@@ -149,16 +141,11 @@ class Simulation:
                           stop_loss, take_profit)
         self.orders.append(new_order)
         print("SELL")
-        if plot_orders:
-            plt.scatter(self.index, price, color="blue")
-        self.order_count += 1
 
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
         self.orders.remove(order)
         print("CLOSE")
-        if plot_orders:
-            plt.scatter(self.index, self.price(), color="black")
 
     def advance(self):
         if self.index < len(price_data):
