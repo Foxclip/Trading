@@ -61,6 +61,11 @@ def add_from_template(template):
 def run_all():
     for sim in simulations:
         sim.run()
+        print(
+            f"sl {sim.sl_range} "
+            f"tp {sim.tp_range} "
+            f"balance {from_curr(sim.balance, precision)}"
+        )
 
 
 class OrderType(enum.Enum):
@@ -97,10 +102,10 @@ class Order:
         elif self.type == OrderType.SELL:
             SL_hit = (self.stop_loss > 0 and price >= self.stop_loss)
             TP_hit = (self.take_profit > 0 and price <= self.take_profit)
-        if(SL_hit):
-            print("SL_hit")
-        if(TP_hit):
-            print("TP_hit")
+        # if(SL_hit):
+            # print("SL_hit")
+        # if(TP_hit):
+            # print("TP_hit")
         return SL_hit or TP_hit
 
 
@@ -163,11 +168,11 @@ class Simulation:
         price = self.price() if self.ignore_spread else bid_or_ask_price
         amount = to_curr(lots * lot_size, precision)
         margin = calculate_margin(amount, price, self.leverage)
-        if margin > self.free_margin():
-            raise Exception(f"Not enough free margin to {str}")
+        # if margin > self.free_margin():
+        #     raise Exception(f"Not enough free margin to {str}")
         new_order = Order(amount, price, order_type, stop_loss, take_profit)
         self.orders.append(new_order)
-        print(str)
+        # print(str)
 
     def buy(self, lots, stop_loss=0, take_profit=0):
         self._buy_or_sell(lots, stop_loss, take_profit, OrderType.BUY)
@@ -178,7 +183,7 @@ class Simulation:
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
         self.orders.remove(order)
-        print("CLOSE")
+        # print("CLOSE")
 
     def advance(self):
         if self.index < len(price_data):
@@ -203,7 +208,7 @@ class Simulation:
         for order_i in range(len(self.orders) - 1, -1, -1):
             if(self.orders[order_i].should_close(self.price())):
                 self.close_order(self.orders[order_i])
-                print("___SLTP___")
+                # print("___SLTP___")
 
     def action(self):
         if(self.index > 0):
@@ -241,13 +246,14 @@ class Simulation:
                         self.buy(0.01)
 
     def output(self):
-        print(
-            f"Name: {self.name} "
-            f"Bar: {self.index} "
-            f"Price: {from_curr(self.price(), precision)} "
-            f"Balance: {from_curr(self.balance, precision)} "
-            f"Equity: {from_curr(self.equity(), precision)} "
-            f"FPL: {from_curr(self.floating_PL(), precision)} "
-            f"um: {from_curr(self.used_margin(), precision)} "
-            f"fm: {from_curr(self.free_margin(), precision)}"
-        )
+        pass
+        # print(
+        #     f"Name: {self.name} "
+        #     f"Bar: {self.index} "
+        #     f"Price: {from_curr(self.price(), precision)} "
+        #     f"Balance: {from_curr(self.balance, precision)} "
+        #     f"Equity: {from_curr(self.equity(), precision)} "
+        #     f"FPL: {from_curr(self.floating_PL(), precision)} "
+        #     f"um: {from_curr(self.used_margin(), precision)} "
+        #     f"fm: {from_curr(self.free_margin(), precision)}"
+        # )
