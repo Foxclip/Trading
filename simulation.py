@@ -89,6 +89,7 @@ class Order:
         self.type = type
         self.stop_loss = stop_loss
         self.take_profit = take_profit
+        self.hedging_order = None
 
     def calculate_floating_PL(self, price):
         pricediff = 0
@@ -110,18 +111,21 @@ class Order:
         elif self.type == OrderType.SELL:
             SL_hit = (self.stop_loss > 0 and price >= self.stop_loss)
             TP_hit = (self.take_profit > 0 and price <= self.take_profit)
+        result = SL_hit or TP_hit
+        # if result:
+        #     print(f"type {self.type} sl {self.stop_loss} tp {self.take_profit}")
         # if(SL_hit):
-            # print("SL_hit")
+        #     print("SL_hit")
         # if(TP_hit):
-            # print("TP_hit")
-        return SL_hit or TP_hit
+        #     print("TP_hit")
+        return result
 
 
 class Simulation:
 
     def __init__(self, balance=0.0, ma_length=10, ignore_spread=False,
                  put_stops=False, sl_range=20, tp_range=20, leverage=500,
-                 name="Untitled"):
+                 hedge=False, name="Untitled"):
         self.index = 0
         self.orders = []
         self.ma_record = []
@@ -134,6 +138,7 @@ class Simulation:
         self.tp_range = tp_range
         self.name = name
         self.leverage = leverage
+        self.hedge = hedge
 
     def price(self, lookback=0):
         return price_data[self.index - lookback]
@@ -181,12 +186,39 @@ class Simulation:
         new_order = Order(amount, price, order_type, stop_loss, take_profit)
         self.orders.append(new_order)
         # print(str)
+        return new_order
 
-    def buy(self, lots, stop_loss=0, take_profit=0):
-        self._buy_or_sell(lots, stop_loss, take_profit, OrderType.BUY)
+    def buy(self, lots, sl=0, tp=0):
+        stop_loss = self.price() - sl
+        take_profit = self.price() + tp
+        order = self._buy_or_sell(lots, stop_loss, take_profit, OrderType.BUY)
+        hedge_sl = 0
+        hedge_tp = 0
+        if self.hedge:
+            if tp > sl:
+                hedge_sl = self.price() + sl
+            else:
+                hedge_sl = self.price() + tp / 2
+            hedge_tp = self.price() - sl
+            order.hedging_order = self._buy_or_sell(lots, hedge_sl, hedge_tp,
+                                                    OrderType.SELL)
+            # print(f"BUY sl {order.stop_loss} tp {order.take_profit} hsl {order.hedging_order.stop_loss} htp {order.hedging_order.take_profit}")
 
-    def sell(self, lots, stop_loss=0, take_profit=0):
-        self._buy_or_sell(lots, stop_loss, take_profit, OrderType.SELL)
+    def sell(self, lots, sl=0, tp=0):
+        stop_loss = self.price() + sl
+        take_profit = self.price() - tp
+        order = self._buy_or_sell(lots, stop_loss, take_profit, OrderType.SELL)
+        hedge_sl = 0
+        hedge_tp = 0
+        if self.hedge:
+            if tp > sl:
+                hedge_sl = self.price() - sl
+            else:
+                hedge_sl = self.price() - tp / 2
+            hedge_tp = self.price() + sl
+            order.hedging_order = self._buy_or_sell(lots, hedge_sl, hedge_tp,
+                                                    OrderType.BUY)
+            # print(f"SELL sl {order.stop_loss} tp {order.take_profit} hsl {order.hedging_order.stop_loss} htp {order.hedging_order.take_profit}")
 
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
@@ -236,9 +268,7 @@ class Simulation:
                 it_wasnt_above_ma = self.price(1) - self.ma_record[-2] <= 0
                 if(price_above_ma and it_wasnt_above_ma):
                     if self.put_stops:
-                        self.sell(0.01,
-                                  stop_loss=self.price() + self.sl_range,
-                                  take_profit=self.price() - self.tp_range)
+                        self.sell(0.01, sl=self.sl_range, tp=self.tp_range)
                     else:
                         self.sell(0.01)
             # buy
@@ -247,9 +277,7 @@ class Simulation:
                 it_wasnt_below_ma = self.price(1) - self.ma_record[-2] >= 0
                 if(price_below_ma and it_wasnt_below_ma):
                     if(self.put_stops):
-                        self.buy(0.01,
-                                 stop_loss=self.price() - self.sl_range,
-                                 take_profit=self.price() + self.tp_range)
+                        self.buy(0.01, sl=self.sl_range, tp=self.tp_range)
                     else:
                         self.buy(0.01)
 

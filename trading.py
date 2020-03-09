@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     # settings
     simulation.precision = 5
-    simulation.amount = 10000
+    simulation.amount = 1000000
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -20,25 +20,35 @@ if __name__ == "__main__":
         "ignore_spread": False,
         "put_stops": True,
         "sl_range": 100,
-        "tp_range": 500,
+        "tp_range": 400,
         "leverage": 500,
         "name": "Untitled"
     }
-    sl_list = [400, 500]
-    tp_list = [50, 75, 100, 150, 200]
-    for tp in tp_list:
-        for sl in sl_list:
-            template = main_template.copy()
-            template["sl_range"] = sl
-            template["tp_range"] = tp
-            template["name"] = f"sl{sl} tp{tp}"
-            simulation.add_from_template(template)
+
+    template = main_template.copy()
+    template["name"] = "no_hedge 100 400"
+    simulation.add_from_template(template)
+
+    template = main_template.copy()
+    template["hedge"] = True
+    template["name"] = "hedge 100 400"
+    simulation.add_from_template(template)
+
+    template = main_template.copy()
+    template["sl_range"] = 400
+    template["tp_range"] = 100
+    template["name"] = "no_hedge 400 100"
+    simulation.add_from_template(template)
+
+    template = main_template.copy()
+    template["hedge"] = True
+    template["sl_range"] = 400
+    template["tp_range"] = 100
+    template["name"] = "hedge 400 100"
+    simulation.add_from_template(template)
 
     # running simulations
-    simulation.run_all(["sl_range", "tp_range", "balance"])
-
-    # balance surface plot
-    plot.balance_surface_plot(x=sl_list, y=tp_list, xlabel="SL", ylabel="TP")
+    simulation.run_all(["name", "hedge", "balance"])
 
     # balance plot
-    # plot.plot_balance()
+    plot.plot_balance()
