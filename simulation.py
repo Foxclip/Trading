@@ -2,6 +2,7 @@ import pandas as pd
 import enum
 from statistics import mean
 import math
+import time
 
 precision = 5
 amount = 1000000
@@ -58,14 +59,21 @@ def add_from_template(template):
     simulations.append(new_sim)
 
 
-def run_all():
+def run_all(print_props=[]):
+    print("Running simulations")
+    time1 = time.time()
     for sim in simulations:
         sim.run()
-        print(
-            f"sl {sim.sl_range} "
-            f"tp {sim.tp_range} "
-            f"balance {from_curr(sim.balance, precision)}"
-        )
+        if print_props:
+            for prop_name in print_props:
+                prop_value = getattr(sim, prop_name)
+                if prop_name == "balance":
+                    prop_value = from_curr(sim.balance, precision)
+                print(f"{prop_name} {prop_value}", end=' ')
+            print()
+    time2 = time.time()
+    time_passed = time2 - time1
+    print(f"Time: {time_passed}s")
 
 
 class OrderType(enum.Enum):

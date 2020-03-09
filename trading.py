@@ -1,7 +1,6 @@
 from mpl_toolkits import mplot3d  # noqa
 import simulation
 from simulation import to_curr
-import time
 import plot
 
 
@@ -36,14 +35,10 @@ if __name__ == "__main__":
             simulation.add_from_template(template)
 
     # running simulations
-    time1 = time.time()
-    simulation.run_all()
-    time2 = time.time()
-    time_passed = time2 - time1
-    print(f"Time: {time_passed}s")
+    simulation.run_all(["sl_range", "tp_range", "balance"])
 
     # balance surface plot
     plot.balance_surface_plot(x=sl_list, y=tp_list, xlabel="SL", ylabel="TP")
 
     # balance plot
-    plot.plot_balance()
+    # plot.plot_balance()
