@@ -1,26 +1,15 @@
-import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d  # noqa
 import simulation
-from simulation import to_curr, from_curr
-import numpy as np
+from simulation import to_curr
 import time
-
-
-def surface_plot(x, y, z, xlabel="", ylabel=""):
-    x, y = np.meshgrid(x, y)
-    plt.figure()
-    ax = plt.axes(projection='3d')
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.plot_surface(x, y, z, cmap='plasma')
-    plt.show()
+import plot
 
 
 if __name__ == "__main__":
 
     # settings
     simulation.precision = 5
-    simulation.amount = 1000000
+    simulation.amount = 10000
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -36,8 +25,8 @@ if __name__ == "__main__":
         "leverage": 500,
         "name": "Untitled"
     }
-    sl_list = [25, 50, 75, 100, 150, 200, 350, 400, 450, 600]
-    tp_list = sl_list[:]
+    sl_list = [400, 500]
+    tp_list = [50, 75, 100, 150, 200]
     for tp in tp_list:
         for sl in sl_list:
             template = main_template.copy()
@@ -53,20 +42,8 @@ if __name__ == "__main__":
     time_passed = time2 - time1
     print(f"Time: {time_passed}s")
 
-    # bar plot
-    x = np.array(sl_list[:])
-    y = np.array(tp_list[:])
-    balance_arr = np.array([from_curr(sim.balance, simulation.precision)
-                            for sim
-                            in simulation.simulations])
-    z = balance_arr.reshape(len(tp_list), len(sl_list))
-    surface_plot(x, y, z, xlabel="SL", ylabel="TP")
+    # balance surface plot
+    plot.balance_surface_plot(x=sl_list, y=tp_list, xlabel="SL", ylabel="TP")
 
-    # # plotting results
-    # for sim in simulation.simulations:
-    #     record = sim.balance_record
-    #     precision = simulation.precision
-    #     balance_record = from_curr(record, precision)
-    #     plt.plot(balance_record, label=sim.name)
-    # plt.legend(loc="upper right")
-    # plt.show()
+    # balance plot
+    plot.plot_balance()
