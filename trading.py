@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     # settings
     simulation.precision = 5
-    simulation.amount = 1000000
+    simulation.amount = 10000
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
