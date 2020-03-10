@@ -72,7 +72,10 @@ def run_all(print_props=[]):
                 prop_value = getattr(sim, prop_name)
                 if prop_name == "balance":
                     prop_value = from_curr(sim.balance, precision)
-                print(f"{prop_name} {prop_value}", end=' ')
+                if prop_name == "name":
+                    print(f"{prop_value}", end=' ')
+                    continue
+                print(f"{prop_name}:{prop_value}", end=' ')
             print()
     time2 = time.time()
     time_passed = time2 - time1
