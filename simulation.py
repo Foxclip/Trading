@@ -1,8 +1,9 @@
 import pandas as pd
 import enum
-from statistics import mean
 import math
 import time
+from indicators import detect_cross
+from indicators import MovingAverage
 
 precision = 5
 amount = 1000000
@@ -133,7 +134,7 @@ class Order:
 class Simulation:
 
     def __init__(self, balance=0.0, ma_length=10, ignore_spread=False,
-                 put_stops=False, sl_range=20, tp_range=20, leverage=500,
+                 sl_range=20, tp_range=20, leverage=500,
                  hedge=False, name="Untitled"):
         self.index = 0
         self.orders = []
@@ -142,12 +143,14 @@ class Simulation:
         self.balance = to_curr(balance, precision)
         self.ma_length = ma_length
         self.ignore_spread = ignore_spread
-        self.put_stops = put_stops
         self.sl_range = sl_range
         self.tp_range = tp_range
         self.name = name
         self.leverage = leverage
         self.hedge = hedge
+        self.ma1 = MovingAverage(price_data, 1)
+        self.ma10 = MovingAverage(price_data, 10)
+        self.indicators = [self.ma1, self.ma10]
 
     def price(self, lookback=0):
         return price_data[self.index - lookback]
@@ -165,12 +168,6 @@ class Simulation:
 
     def equity(self):
         return self.balance + self.floating_PL()
-
-    def moving_average(self, length):
-        if(self.index < length):
-            return mean(price_data[0:self.index + 1])
-        else:
-            return mean(price_data[self.index - length:self.index + 1])
 
     def used_margin(self):
         return sum([order.margin(self.price(), self.leverage)
@@ -250,8 +247,9 @@ class Simulation:
             pass
 
     def record(self):
-        self.ma_record.append(self.moving_average(self.ma_length))
         self.balance_record.append(self.balance)
+        for indicator in self.indicators:
+            indicator.step(self.index)
 
     def SLTP(self):
         for order_i in range(len(self.orders) - 1, -1, -1):
@@ -262,34 +260,15 @@ class Simulation:
 
     def action(self):
         if(self.index > 0):
-            # close
-            if not self.put_stops:
-                price_not_above_ma = self.price() - self.ma_record[-1] <= 0
-                it_was_above_ma = self.price(1) - self.ma_record[-2] > 0
-                price_not_below_ma = self.price() - self.ma_record[-1] >= 0
-                it_was_below_ma = self.price(1) - self.ma_record[-2] < 0
-                cross_above = price_not_above_ma and it_was_above_ma
-                cross_below = price_not_below_ma and it_was_below_ma
-                if((len(self.orders) > 0) and (cross_above or cross_below)):
-                    self.close_order(self.orders[0])
+            cross_above, cross_below = detect_cross(self.ma1, self.ma10)
             # sell
-            if len(self.orders) == 0 or not self.put_stops:
-                price_above_ma = self.price() - self.ma_record[-1] > 0
-                it_wasnt_above_ma = self.price(1) - self.ma_record[-2] <= 0
-                if(price_above_ma and it_wasnt_above_ma):
-                    if self.put_stops:
-                        self.sell(0.01, sl=self.sl_range, tp=self.tp_range)
-                    else:
-                        self.sell(0.01)
+            if len(self.orders) == 0:
+                if(cross_below):
+                    self.sell(0.01, sl=self.sl_range, tp=self.tp_range)
             # buy
-            if len(self.orders) == 0 or not self.put_stops:
-                price_below_ma = self.price() - self.ma_record[-1] < 0
-                it_wasnt_below_ma = self.price(1) - self.ma_record[-2] >= 0
-                if(price_below_ma and it_wasnt_below_ma):
-                    if(self.put_stops):
-                        self.buy(0.01, sl=self.sl_range, tp=self.tp_range)
-                    else:
-                        self.buy(0.01)
+            if len(self.orders) == 0:
+                if(cross_above):
+                    self.buy(0.01, sl=self.sl_range, tp=self.tp_range)
 
     def output(self):
         if step_output:
