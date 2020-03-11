@@ -134,8 +134,9 @@ class Order:
 class Simulation:
 
     def __init__(self, balance=0.0, ma_length=10, ignore_spread=False,
-                 sl_range=20, tp_range=20, leverage=500,
-                 hedge=False, name="Untitled"):
+                 sl_range=20, tp_range=20,
+                 ma1=1, ma2=10,
+                 leverage=500, hedge=False, name="Untitled"):
         self.index = 0
         self.orders = []
         self.ma_record = []
@@ -148,9 +149,8 @@ class Simulation:
         self.name = name
         self.leverage = leverage
         self.hedge = hedge
-        self.ma1 = MovingAverage(1)
-        self.ma10 = MovingAverage(10)
-        self.indicators = [self.ma1, self.ma10]
+        self.ma1 = ma1
+        self.ma2 = ma2
 
     def price(self, lookback=0):
         return price_data[self.index - lookback]
@@ -231,6 +231,11 @@ class Simulation:
         if order_output:
             print("CLOSE")
 
+    def init(self):
+        self.ma1 = MovingAverage(self.ma1)
+        self.ma2 = MovingAverage(self.ma2)
+        self.indicators = [self.ma1, self.ma2]
+
     def advance(self):
         if self.index < len(price_data):
             self.record()
@@ -243,6 +248,7 @@ class Simulation:
             return False
 
     def run(self):
+        self.init()
         while(self.advance()):
             pass
 
@@ -260,13 +266,10 @@ class Simulation:
 
     def action(self):
         if(self.index > 0):
-            cross_above, cross_below = detect_cross(self.ma1, self.ma10)
-            # sell
+            cross_above, cross_below = detect_cross(self.ma1, self.ma2)
             if len(self.orders) == 0:
                 if(cross_below):
                     self.sell(0.01, sl=self.sl_range, tp=self.tp_range)
-            # buy
-            if len(self.orders) == 0:
                 if(cross_above):
                     self.buy(0.01, sl=self.sl_range, tp=self.tp_range)
 

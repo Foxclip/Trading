@@ -21,6 +21,8 @@ if __name__ == "__main__":
         "put_stops": True,
         "sl_range": 100,
         "tp_range": 400,
+        "ma1": 10,
+        "ma2": 20,
         "leverage": 500,
         "name": "Untitled"
     }
