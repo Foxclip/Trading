@@ -48,4 +48,4 @@ def balance_surface_plot(x, y, xlabel, ylabel):
                             for sim
                             in simulation.simulations])
     z = balance_arr.reshape(len(y), len(x))
-    surface_plot(x, y, z, xlabel="SL", ylabel="TP")
+    surface_plot(x, y, z, xlabel=xlabel, ylabel=ylabel)

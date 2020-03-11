@@ -16,9 +16,7 @@ if __name__ == "__main__":
     # creating simulations
     main_template = {
         "balance": to_curr(100.0, simulation.precision),
-        "ma_length": 15,
         "ignore_spread": False,
-        "put_stops": True,
         "sl_range": 100,
         "tp_range": 400,
         "ma1": 10,
@@ -27,31 +25,18 @@ if __name__ == "__main__":
         "name": "Untitled"
     }
 
-    template = main_template.copy()
-    template["name"] = "no_hedge 100 400"
-    simulation.add_from_template(template)
-
-    template = main_template.copy()
-    template["hedge"] = True
-    template["name"] = "   hedge 100 400"
-    simulation.add_from_template(template)
-
-    template = main_template.copy()
-    template["sl_range"] = 400
-    template["tp_range"] = 100
-    template["name"] = "no_hedge 400 100"
-    simulation.add_from_template(template)
-
-    template = main_template.copy()
-    template["hedge"] = True
-    template["sl_range"] = 400
-    template["tp_range"] = 100
-    template["name"] = "   hedge 400 100"
-    simulation.add_from_template(template)
+    ma1lst = [1, 2, 4, 8, 16, 32, 64, 128]
+    ma2lst = ma1lst[:]
+    for ma2 in ma2lst:
+        for ma1 in ma1lst:
+            template = main_template.copy()
+            template["name"] = f"{ma1} {ma2}"
+            template["ma1"] = ma1
+            template["ma2"] = ma2
+            simulation.add_from_template(template)
 
     # running simulations
     simulation.run_all(["name", "hedge", "balance"])
 
     # balance plot
-    plot.plot_balance(diff=False)
-    plot.plot_balance(diff=True, resolution=10)
+    plot.balance_surface_plot(ma1lst, ma2lst, xlabel="ma1", ylabel="ma2")

@@ -139,10 +139,8 @@ class Simulation:
                  leverage=500, hedge=False, name="Untitled"):
         self.index = 0
         self.orders = []
-        self.ma_record = []
         self.balance_record = []
         self.balance = to_curr(balance, precision)
-        self.ma_length = ma_length
         self.ignore_spread = ignore_spread
         self.sl_range = sl_range
         self.tp_range = tp_range

@@ -1,5 +1,6 @@
 from statistics import mean
 import simulation
+from queue import Queue
 
 
 class Indicator:
@@ -16,17 +17,13 @@ class MovingAverage(Indicator):
     def __init__(self, length):
         Indicator.__init__(self)
         self.length = length
+        self.queue = Queue(maxsize=length)
 
     def step(self, offset):
-        start = 0
-        end = 0
-        if(offset < self.length):
-            start = 0
-            end = offset + 1
-        else:
-            start = offset - self.length
-            end = offset + 1
-        value = mean(simulation.price_data[start:end])
+        if self.queue.qsize() == self.queue.maxsize:
+            self.queue.get()
+        self.queue.put(simulation.price_data[offset])
+        value = mean(self.queue.queue)
         self.record.append(value)
 
 
