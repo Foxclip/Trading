@@ -1,11 +1,11 @@
 from statistics import mean
+import simulation
 
 
 class Indicator:
 
-    def __init__(self, price_data):
+    def __init__(self):
         self.record = []
-        self.price_data = price_data
 
     def step(self):
         raise NotImplementedError()
@@ -13,15 +13,20 @@ class Indicator:
 
 class MovingAverage(Indicator):
 
-    def __init__(self, price_data, length):
-        Indicator.__init__(self, price_data)
+    def __init__(self, length):
+        Indicator.__init__(self)
         self.length = length
 
     def step(self, offset):
+        start = 0
+        end = 0
         if(offset < self.length):
-            value = mean(self.price_data[0:offset + 1])
+            start = 0
+            end = offset + 1
         else:
-            value = mean(self.price_data[offset - self.length:offset + 1])
+            start = offset - self.length
+            end = offset + 1
+        value = mean(simulation.price_data[start:end])
         self.record.append(value)
 
 

@@ -148,8 +148,8 @@ class Simulation:
         self.name = name
         self.leverage = leverage
         self.hedge = hedge
-        self.ma1 = MovingAverage(price_data, 1)
-        self.ma10 = MovingAverage(price_data, 10)
+        self.ma1 = MovingAverage(1)
+        self.ma10 = MovingAverage(10)
         self.indicators = [self.ma1, self.ma10]
 
     def price(self, lookback=0):
