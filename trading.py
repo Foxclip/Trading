@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     # settings
     simulation.precision = 5
-    simulation.amount = 100000
+    simulation.amount = 10000
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -25,15 +25,19 @@ if __name__ == "__main__":
         "name": "Untitled"
     }
 
+    # creating simulations
+
     ma1lst = [1, 2, 4, 8, 16, 32, 64, 128]
     ma2lst = ma1lst[:]
-    for ma2 in ma2lst:
-        for ma1 in ma1lst:
-            template = main_template.copy()
-            template["name"] = f"{ma1} {ma2}"
-            template["ma1"] = ma1
-            template["ma2"] = ma2
-            simulation.add_from_template(template)
+
+    def create_sim(ma1, ma2):
+        template = main_template.copy()
+        template["name"] = f"{ma1} {ma2}"
+        template["ma1"] = ma1
+        template["ma2"] = ma2
+        simulation.add_from_template(template)
+
+    simulation.create_grid(ma1lst, ma2lst, create_sim)
 
     # running simulations
     simulation.run_all(["name", "hedge", "balance"])

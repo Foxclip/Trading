@@ -83,6 +83,12 @@ def run_all(print_props=[]):
     print(f"Time: {time_passed}s")
 
 
+def create_grid(list1, list2, f):
+    for l2 in list2:
+        for l1 in list1:
+            f(l1, l2)
+
+
 class OrderType(enum.Enum):
     BUY = 0
     SELL = 1
