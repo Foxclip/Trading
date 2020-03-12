@@ -1,15 +1,17 @@
-from statistics import mean
 import simulation
-from queue import Queue
+import utils
 
 
 class Indicator:
 
     def __init__(self):
-        self.record = []
+        self.data = []
 
-    def step(self):
+    def calculate(self):
         raise NotImplementedError()
+
+    def __getitem__(self, offset):
+        return self.data[offset]
 
 
 class MovingAverage(Indicator):
@@ -17,21 +19,14 @@ class MovingAverage(Indicator):
     def __init__(self, length):
         Indicator.__init__(self)
         self.length = length
-        self.queue = Queue(maxsize=length)
-
-    def step(self, offset):
-        if self.queue.qsize() == self.queue.maxsize:
-            self.queue.get()
-        self.queue.put(simulation.price_data[offset])
-        value = mean(self.queue.queue)
-        self.record.append(value)
+        self.data = utils.moving_average(simulation.price_data, self.length)
 
 
-def detect_cross(ma1, ma2):
-    v1 = ma1.record[-1]
-    v2 = ma2.record[-1]
-    v1p = ma1.record[-2]
-    v2p = ma2.record[-2]
+def detect_cross(ma1, ma2, offset):
+    v1 = ma1[offset - 1]
+    v2 = ma2[offset - 1]
+    v1p = ma1[offset - 2]
+    v2p = ma2[offset - 2]
     ma1_not_above_ma2 = v1 - v2 <= 0
     it_was_above_ma2 = v1p - v2p > 0
     ma1_not_below_ma2 = v1 - v2 >= 0

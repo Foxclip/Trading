@@ -14,6 +14,7 @@ lot_size = 100000
 price_data = None
 ask_data = None
 bid_data = None
+indicators = {}
 simulations = []
 
 
@@ -151,10 +152,10 @@ class Simulation:
         self.sl_range = sl_range
         self.tp_range = tp_range
         self.name = name
-        self.leverage = leverage
-        self.hedge = hedge
         self.ma1 = ma1
         self.ma2 = ma2
+        self.leverage = leverage
+        self.hedge = hedge
 
     def price(self, lookback=0):
         return price_data[self.index - lookback]
@@ -235,11 +236,6 @@ class Simulation:
         if order_output:
             print("CLOSE")
 
-    def init(self):
-        self.ma1 = MovingAverage(self.ma1)
-        self.ma2 = MovingAverage(self.ma2)
-        self.indicators = [self.ma1, self.ma2]
-
     def advance(self):
         if self.index < len(price_data):
             self.record()
@@ -251,6 +247,15 @@ class Simulation:
         else:
             return False
 
+    def init(self):
+        # creating missing indicators
+        ma1_name = f"ma{self.ma1}"
+        ma2_name = f"ma{self.ma2}"
+        if ma1_name not in indicators:
+            indicators[ma1_name] = MovingAverage(self.ma1)
+        if ma2_name not in indicators:
+            indicators[ma2_name] = MovingAverage(self.ma2)
+
     def run(self):
         self.init()
         while(self.advance()):
@@ -258,8 +263,6 @@ class Simulation:
 
     def record(self):
         self.balance_record.append(self.balance)
-        for indicator in self.indicators:
-            indicator.step(self.index)
 
     def SLTP(self):
         for order_i in range(len(self.orders) - 1, -1, -1):
@@ -270,7 +273,9 @@ class Simulation:
 
     def action(self):
         if(self.index > 0):
-            cross_above, cross_below = detect_cross(self.ma1, self.ma2)
+            ma1 = indicators[f"ma{self.ma1}"]
+            ma2 = indicators[f"ma{self.ma2}"]
+            cross_above, cross_below = detect_cross(ma1, ma2, self.index)
             if len(self.orders) == 0:
                 if(cross_below):
                     self.sell(0.01, sl=self.sl_range, tp=self.tp_range)

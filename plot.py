@@ -3,6 +3,7 @@ from mpl_toolkits import mplot3d  # noqa
 import numpy as np
 import simulation
 from simulation import from_curr
+import utils
 
 
 def simple_deriv(lst):
@@ -12,11 +13,6 @@ def simple_deriv(lst):
     return deriv_lst
 
 
-def ma(x, N):
-    cumsum = np.cumsum(np.insert(x, 0, 0))
-    return (cumsum[N:] - cumsum[:-N]) / float(N)
-
-
 def plot_balance(diff=False, resolution=10):
     for sim in simulation.simulations:
         record = sim.balance_record
@@ -24,7 +20,8 @@ def plot_balance(diff=False, resolution=10):
         balance_record = from_curr(record, precision)
         if diff:
             count = simulation.amount // resolution
-            balance_record = ma(simple_deriv(balance_record), count)
+            deriv = simple_deriv(balance_record)
+            balance_record = utils.moving_average(deriv, count)
             plt.plot([0, len(balance_record)], [0, 0], color="red")
         plt.plot(balance_record, label=sim.name)
     plt.legend(loc="upper left")
