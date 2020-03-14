@@ -19,7 +19,7 @@ indicators = {}
 simulations = []
 
 
-def to_curr(object, precision):
+def to_curr(object):
     if isinstance(object, float):
         return int(round(object * 10**precision))
     elif isinstance(object, list):
@@ -28,7 +28,7 @@ def to_curr(object, precision):
         raise Exception(f"{type(amount)} should not be in to_curr")
 
 
-def from_curr(object, precision):
+def from_curr(object):
     if isinstance(object, int):
         return object / 10**precision
     elif isinstance(object, list):
@@ -38,7 +38,7 @@ def from_curr(object, precision):
 
 
 def calculate_margin(amount, price, leverage):
-    return int(amount * from_curr(price, precision)) // leverage
+    return int(amount * from_curr(price)) // leverage
 
 
 def generate_bidask_file(bidask_path, df):
@@ -69,9 +69,9 @@ def load_file(path):
         df = pd.read_csv(path, sep="\t")
         df = generate_bidask_file(bidask_path, df)
     global price_data, ask_data, bid_data
-    price_data = to_curr(list(df["<CLOSE>"]), precision)
-    ask_data = to_curr(list(df["ASK"])[-amount:], precision)
-    bid_data = to_curr(list(df["BID"])[-amount:], precision)
+    price_data = to_curr(list(df["<CLOSE>"]))
+    ask_data = to_curr(list(df["ASK"])[-amount:])
+    bid_data = to_curr(list(df["BID"])[-amount:])
 
 
 def add_from_template(template):
@@ -90,7 +90,7 @@ def run_all(print_props=[]):
             for prop_name in print_props:
                 prop_value = getattr(sim, prop_name)
                 if prop_name == "balance":
-                    prop_value = from_curr(sim.balance, precision)
+                    prop_value = from_curr(sim.balance)
                 if prop_name == "name":
                     print(f"{prop_value}", end=' ')
                     continue
@@ -128,7 +128,7 @@ class Order:
             pricediff = price - self.open_price
         else:
             pricediff = self.open_price - price
-        return int(self.amount * from_curr(pricediff, precision))
+        return int(self.amount * from_curr(pricediff))
 
     def margin(self, price, leverage):
         return calculate_margin(self.amount, price, leverage)
@@ -164,7 +164,7 @@ class Simulation:
         self.index = 0
         self.orders = []
         self.balance_record = []
-        self.balance = to_curr(balance, precision)
+        self.balance = to_curr(balance)
         self.ignore_spread = ignore_spread
         self.sl_range = sl_range
         self.tp_range = tp_range
@@ -207,7 +207,7 @@ class Simulation:
             bid_or_ask_price = self.bid_price()
             str = "SELL"
         price = self.price() if self.ignore_spread else bid_or_ask_price
-        amount = to_curr(lots * lot_size, precision)
+        amount = to_curr(lots * lot_size)
         margin = calculate_margin(amount, price, self.leverage)
         if not neg_balance and margin > self.free_margin():
             raise Exception(f"Not enough free margin to {str}")

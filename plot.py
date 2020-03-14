@@ -16,8 +16,7 @@ def simple_deriv(lst):
 def plot_balance(diff=False, resolution=10):
     for sim in simulation.simulations:
         record = sim.balance_record
-        precision = simulation.precision
-        balance_record = from_curr(record, precision)
+        balance_record = from_curr(record)
         if diff:
             count = simulation.amount // resolution
             deriv = simple_deriv(balance_record)
@@ -41,7 +40,7 @@ def surface_plot(x, y, z, xlabel="", ylabel=""):
 def balance_surface_plot(x, y, xlabel, ylabel):
     x = np.array(x[:])
     y = np.array(y[:])
-    balance_arr = np.array([from_curr(sim.balance, simulation.precision)
+    balance_arr = np.array([from_curr(sim.balance)
                             for sim
                             in simulation.simulations])
     z = balance_arr.reshape(len(y), len(x))

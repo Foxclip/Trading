@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     # creating simulations
     main_template = {
-        "balance": to_curr(100.0, simulation.precision),
+        "balance": to_curr(100.0),
         "ignore_spread": False,
         "sl_range": 400,
         "tp_range": 100,
