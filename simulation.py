@@ -43,7 +43,7 @@ def calculate_margin(amount, price, leverage):
 
 def generate_bidask_file(bidask_path, df):
     print("Generating bid/ask file")
-    price_data = to_curr(list(df["<CLOSE>"]), precision)
+    price_data = to_curr(list(df["<CLOSE>"]))
     ask_data = []
     bid_data = []
     for bar_i in range(len(price_data)):
@@ -52,8 +52,8 @@ def generate_bidask_file(bidask_path, df):
         spread_half = math.ceil(spread / 2)
         ask_data.append(price + spread_half)
         bid_data.append(price - spread_half)
-    df["ASK"] = from_curr(ask_data, precision)
-    df["BID"] = from_curr(bid_data, precision)
+    df["ASK"] = from_curr(ask_data)
+    df["BID"] = from_curr(bid_data)
     df.to_csv(bidask_path, index=False, sep="\t")
     return df
 
@@ -69,7 +69,7 @@ def load_file(path):
         df = pd.read_csv(path, sep="\t")
         df = generate_bidask_file(bidask_path, df)
     global price_data, ask_data, bid_data
-    price_data = to_curr(list(df["<CLOSE>"]))
+    price_data = to_curr(list(df["<CLOSE>"]))[-amount:]
     ask_data = to_curr(list(df["ASK"])[-amount:])
     bid_data = to_curr(list(df["BID"])[-amount:])
 

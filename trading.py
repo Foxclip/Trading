@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     # settings
     simulation.precision = 5
-    simulation.amount = 1000000
+    simulation.amount = 100000
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -26,24 +26,24 @@ if __name__ == "__main__":
 
     # creating simulations
 
-    # ma1lst = list(range(1, 41))
-    # ma2lst = ma1lst[:]
-    #
-    # def create_sim(ma1, ma2):
-    #     template = main_template.copy()
-    #     template["name"] = f"{ma1} {ma2}"
-    #     template["ma1"] = ma1
-    #     template["ma2"] = ma2
-    #     simulation.add_from_template(template)
-    #
-    # simulation.create_grid(ma1lst, ma2lst, create_sim)
+    ma1lst = list(range(1, 41))
+    ma2lst = ma1lst[:]
 
-    template = main_template.copy()
-    simulation.add_from_template(template)
+    def create_sim(ma1, ma2):
+        template = main_template.copy()
+        template["name"] = f"{ma1} {ma2}"
+        template["ma1"] = ma1
+        template["ma2"] = ma2
+        simulation.add_from_template(template)
+
+    simulation.create_grid(ma1lst, ma2lst, create_sim)
+
+    # template = main_template.copy()
+    # simulation.add_from_template(template)
 
     # running simulations
     simulation.run_all(["name", "balance"])
 
     # balance plot
-    # plot.balance_surface_plot(ma1lst, ma2lst, xlabel="ma1", ylabel="ma2")
-    plot.plot_balance()
+    plot.balance_surface_plot(ma1lst, ma2lst, xlabel="ma1", ylabel="ma2")
+    # plot.plot_balance()
