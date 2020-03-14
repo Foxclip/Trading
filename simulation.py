@@ -3,6 +3,7 @@ import enum
 import math
 import time
 import os
+import multiprocessing
 from indicators import detect_cross
 from indicators import MovingAverage
 
@@ -17,6 +18,7 @@ ask_data = None
 bid_data = None
 indicators = {}
 simulations = []
+prop_list = []
 
 
 def to_curr(object):
@@ -81,21 +83,18 @@ def add_from_template(template):
     simulations.append(new_sim)
 
 
-def run_all(print_props=[]):
+def _run_simulation(sim):
+    sim.run()
+    sim.print_props(prop_list)
+
+
+def run_all(p_prop_list=[], jobs=None):
     print("Running simulations")
+    global prop_list
+    prop_list = p_prop_list
     time1 = time.time()
-    for sim in simulations:
-        sim.run()
-        if print_props:
-            for prop_name in print_props:
-                prop_value = getattr(sim, prop_name)
-                if prop_name == "balance":
-                    prop_value = from_curr(sim.balance)
-                if prop_name == "name":
-                    print(f"{prop_value}", end=' ')
-                    continue
-                print(f"{prop_name}:{prop_value}", end=' ')
-            print()
+    with multiprocessing.Pool(jobs) as pool:
+        pool.map(_run_simulation, simulations)
     time2 = time.time()
     time_passed = time2 - time1
     print(f"Time: {time_passed}s")
@@ -311,3 +310,14 @@ class Simulation:
                 f"um: {from_curr(self.used_margin(), precision)} "
                 f"fm: {from_curr(self.free_margin(), precision)}"
             )
+
+    def print_props(self, prop_list):
+        for prop_name in prop_list:
+            prop_value = getattr(self, prop_name)
+            if prop_name == "balance":
+                prop_value = from_curr(self.balance)
+            if prop_name == "name":
+                print(f"{prop_value}", end=' ')
+                continue
+            print(f"{prop_name}:{prop_value}", end=' ')
+        print()
