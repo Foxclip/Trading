@@ -2,6 +2,7 @@ import pandas as pd
 import enum
 import math
 import time
+import os
 from indicators import detect_cross
 from indicators import MovingAverage
 
@@ -18,9 +19,11 @@ indicators = {}
 simulations = []
 
 
-def to_curr(amount, precision):
-    if isinstance(amount, float):
-        return int(round(amount * 10**precision))
+def to_curr(object, precision):
+    if isinstance(object, float):
+        return int(round(object * 10**precision))
+    elif isinstance(object, list):
+        return [int(round(x * 10**precision)) for x in object]
     else:
         raise Exception(f"{type(amount)} should not be in to_curr")
 
@@ -38,15 +41,9 @@ def calculate_margin(amount, price, leverage):
     return int(amount * from_curr(price, precision)) // leverage
 
 
-def load_file(path):
-
-    print("Reading CSV")
-    df = pd.read_csv(path, sep="\t")
-
-    print("Generating bid/ask data")
-    price_data_raw = list(df["<CLOSE>"])
-    global price_data, ask_data, bid_data
-    price_data = [to_curr(x, precision) for x in price_data_raw][-amount:]
+def generate_bidask_file(bidask_path, df):
+    print("Generating bid/ask file")
+    price_data = to_curr(list(df["<CLOSE>"]), precision)
     ask_data = []
     bid_data = []
     for bar_i in range(len(price_data)):
@@ -55,6 +52,26 @@ def load_file(path):
         spread_half = math.ceil(spread / 2)
         ask_data.append(price + spread_half)
         bid_data.append(price - spread_half)
+    df["ASK"] = from_curr(ask_data, precision)
+    df["BID"] = from_curr(bid_data, precision)
+    df.to_csv(bidask_path, index=False, sep="\t")
+    return df
+
+
+def load_file(path):
+    print("Reading CSV")
+    path_name, path_ext = os.path.splitext(path)
+    bidask_path = f"{path_name}_bidask{path_ext}"
+    df = None
+    try:
+        df = pd.read_csv(bidask_path, sep="\t")
+    except FileNotFoundError:
+        df = pd.read_csv(path, sep="\t")
+        df = generate_bidask_file(bidask_path, df)
+    global price_data, ask_data, bid_data
+    price_data = to_curr(list(df["<CLOSE>"]), precision)
+    ask_data = to_curr(list(df["ASK"])[-amount:], precision)
+    bid_data = to_curr(list(df["BID"])[-amount:], precision)
 
 
 def add_from_template(template):
