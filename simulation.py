@@ -5,8 +5,7 @@ import time
 import os
 import multiprocessing
 import sys
-from types import ModuleType
-from multiprocessing import Array
+import utils
 from indicators import detect_cross
 from indicators import MovingAverage
 
@@ -86,8 +85,9 @@ def add_from_template(template):
     simulations.append(new_sim)
 
 
-def _global_init(values):
-    pass
+def _global_init(wrappers):
+    for name, obj in wrappers.items():
+        globals()[name] = obj
 
 
 def _run_simulation(sim):
@@ -96,24 +96,49 @@ def _run_simulation(sim):
 
 
 def run_all(p_prop_list=[], jobs=None):
+
     print("Running simulations")
+
     global prop_list
     prop_list = p_prop_list
-    globals_dict = globals().copy()
-    filtered_by_type = {k: v for (k, v) in globals_dict.items()
-                        if isinstance(v, list) or isinstance(v, dict)}
-    filtered_by_name = {k: v for (k, v) in filtered_by_type.items()
-                        if not k.startswith("__") and k[0].islower()}
-    print(filtered_by_type.keys())
-    print(filtered_by_name.keys())
-    wrappers = [Value()]
-    sys.exit(0)
-    time1 = time.time()
-    with multiprocessing.Pool(jobs, _global_init, ()) as pool:
-        pool.map(_run_simulation, simulations)
-    time2 = time.time()
-    time_passed = time2 - time1
-    print(f"Time: {time_passed}s")
+
+    if jobs is None or jobs > 1:
+
+        # get wrappers for shared variables
+        globals_dict = globals().copy()
+        filtered_by_type = {k: v for (k, v) in globals_dict.items()
+                            if isinstance(v, list) or isinstance(v, dict)}
+        filtered_by_name = {k: v for (k, v) in filtered_by_type.items()
+                            if not k.startswith("__") and k[0].islower()}
+        manager = multiprocessing.Manager()
+        wrappers = {}
+        for name, obj in filtered_by_name.items():
+            if isinstance(obj, list):
+                manager_lst = manager.list()
+                utils.copylist(obj, manager_lst)
+                wrappers[name] = manager_lst
+            elif isinstance(obj, dict):
+                manager_dct = manager.dict()
+                utils.copydict(obj, manager_dct)
+                wrappers[name] = manager_dct
+
+        # running simulations with many processes
+        time1 = time.time()
+        with multiprocessing.Pool(jobs, _global_init, (wrappers,)) as pool:
+            pool.map(_run_simulation, simulations)
+        time2 = time.time()
+        time_passed = time2 - time1
+        print(f"Time: {time_passed}s")
+
+    else:
+
+        # running simulations in one process
+        time1 = time.time()
+        for sim in simulations:
+            _run_simulation(sim)
+        time2 = time.time()
+        time_passed = time2 - time1
+        print(f"Time: {time_passed}s")
 
 
 def create_grid(list1, list2, f):

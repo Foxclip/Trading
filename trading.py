@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     # settings
     simulation.precision = 5
-    simulation.amount = 1000
+    simulation.amount = 100000
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # creating simulations
 
-    ma1lst = list(range(1, 41))
+    ma1lst = list(range(1, 11))
     ma2lst = ma1lst[:]
 
     def create_sim(ma1, ma2):
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # simulation.add_from_template(template)
 
     # running simulations
-    simulation.run_all(["name", "balance"])
+    simulation.run_all(["name", "balance"], jobs=None)
 
     # balance plot
     plot.balance_surface_plot(ma1lst, ma2lst, xlabel="ma1", ylabel="ma2")
