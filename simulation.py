@@ -4,7 +4,6 @@ import math
 import time
 import os
 import multiprocessing
-import sys
 import utils
 from indicators import detect_cross
 from indicators import MovingAverage
@@ -85,8 +84,8 @@ def add_from_template(template):
     simulations.append(new_sim)
 
 
-def _global_init(wrappers):
-    for name, obj in wrappers.items():
+def _global_init(sharedvars):
+    for name, obj in sharedvars.items():
         globals()[name] = obj
 
 
@@ -104,27 +103,17 @@ def run_all(p_prop_list=[], jobs=None):
 
     if jobs is None or jobs > 1:
 
-        # get wrappers for shared variables
+        # selecting what variables to copy to other processes
         globals_dict = globals().copy()
         filtered_by_type = {k: v for (k, v) in globals_dict.items()
                             if isinstance(v, list) or isinstance(v, dict)}
         filtered_by_name = {k: v for (k, v) in filtered_by_type.items()
                             if not k.startswith("__") and k[0].islower()}
-        manager = multiprocessing.Manager()
-        wrappers = {}
-        for name, obj in filtered_by_name.items():
-            if isinstance(obj, list):
-                manager_lst = manager.list()
-                utils.copylist(obj, manager_lst)
-                wrappers[name] = manager_lst
-            elif isinstance(obj, dict):
-                manager_dct = manager.dict()
-                utils.copydict(obj, manager_dct)
-                wrappers[name] = manager_dct
+        sharedvars = filtered_by_name  # name is a bit too long
 
         # running simulations with many processes
         time1 = time.time()
-        with multiprocessing.Pool(jobs, _global_init, (wrappers,)) as pool:
+        with multiprocessing.Pool(jobs, _global_init, (sharedvars,)) as pool:
             pool.map(_run_simulation, simulations)
         time2 = time.time()
         time_passed = time2 - time1
