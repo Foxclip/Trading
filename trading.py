@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # creating simulations
 
-    ma1lst = list(range(1, 11))
+    ma1lst = list(range(1, 41))
     ma2lst = ma1lst[:]
 
     def create_sim(ma1, ma2):

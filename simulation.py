@@ -92,6 +92,7 @@ def _global_init(sharedvars):
 def _run_simulation(sim):
     sim.run()
     sim.print_props(prop_list)
+    return sim
 
 
 def run_all(p_prop_list=[], jobs=None):
@@ -114,7 +115,8 @@ def run_all(p_prop_list=[], jobs=None):
         # running simulations with many processes
         time1 = time.time()
         with multiprocessing.Pool(jobs, _global_init, (sharedvars,)) as pool:
-            pool.map(_run_simulation, simulations)
+            global simulations
+            simulations = pool.map(_run_simulation, simulations)
         time2 = time.time()
         time_passed = time2 - time1
         print(f"Time: {time_passed}s")
