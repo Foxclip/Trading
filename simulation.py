@@ -93,7 +93,8 @@ def _global_init(sharedvars):
 
 def _run_simulation(sim):
     sim.run()
-    sim.print_props(prop_list)
+    if prop_list:
+        sim.print_props(prop_list)
     return sim
 
 
