@@ -4,16 +4,18 @@ import math
 import time
 import os
 import multiprocessing
-import utils
 from indicators import detect_cross
 from indicators import MovingAverage
 
+# These variables will be copied to other processes. After adding a varible in
+# here check if it's type is in the list int the run_all() function.
 precision = 5
 amount = 1000000
 step_output = False
 order_output = False
 neg_balance = True
 lot_size = 100000
+record_balance = True
 price_data = None
 ask_data = None
 bid_data = None
@@ -106,15 +108,16 @@ def run_all(p_prop_list=[], jobs=None):
 
         # selecting what variables to copy to other processes
         globals_dict = globals().copy()
+        allowed_types = [list, dict, bool, int]
         filtered_by_type = {k: v for (k, v) in globals_dict.items()
-                            if isinstance(v, list) or isinstance(v, dict)}
+                            if type(v) in allowed_types}
         filtered_by_name = {k: v for (k, v) in filtered_by_type.items()
                             if not k.startswith("__") and k[0].islower()}
-        sharedvars = filtered_by_name  # name is a bit too long
+        copiedvars = filtered_by_name  # name is a bit too long
 
         # running simulations with many processes
         time1 = time.time()
-        with multiprocessing.Pool(jobs, _global_init, (sharedvars,)) as pool:
+        with multiprocessing.Pool(jobs, _global_init, (copiedvars,)) as pool:
             global simulations
             simulations = pool.map(_run_simulation, simulations)
         time2 = time.time()
@@ -310,7 +313,9 @@ class Simulation:
             pass
 
     def record(self):
-        self.balance_record.append(self.balance)
+        if record_balance:
+            self.balance_record.append(self.balance)
+        pass
 
     def SLTP(self):
         for order_i in range(len(self.orders) - 1, -1, -1):
