@@ -4,14 +4,14 @@ import plot
 
 
 def single_sim(template, diff=None, resolution=None):
-    simulation.record_balance = True
+    simulation.global_settings.record_balance = True
     simulation.add_from_template(template)
     simulation.run_all(jobs=1)
     plot.plot_balance(diff=diff, resolution=resolution)
 
 
 def grid_search(f, lst1, lst2, xlabel, ylabel):
-    simulation.record_balance = False  # these records can take all memory
+    simulation.global_settings.record_balance = False
     simulation.create_grid(lst1, lst2, f)
     simulation.run_all(["name", "balance"], jobs=None)
     plot.balance_surface_plot(lst1, lst2, xlabel=xlabel, ylabel=ylabel)
@@ -20,8 +20,8 @@ def grid_search(f, lst1, lst2, xlabel, ylabel):
 if __name__ == "__main__":
 
     # settings
-    simulation.precision = 5
-    simulation.amount = 10**5
+    simulation.global_settings.precision = 5
+    simulation.global_settings.amount = 10**4
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")

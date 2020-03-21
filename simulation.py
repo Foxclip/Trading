@@ -7,37 +7,49 @@ import multiprocessing
 from indicators import detect_cross
 from indicators import MovingAverage
 
-# These variables will be copied to other processes. After adding a varible in
-# here check if it's type is in the list int the run_all() function.
-precision = 5
-amount = 1000000
-step_output = False
-order_output = False
-neg_balance = True
-lot_size = 100000
-record_balance = True
-price_data = None
-ask_data = None
-bid_data = None
-indicators = {}
+
 simulations = []
-prop_list = []
+
+
+class GlobalSettings:
+    precision = 5
+    amount = 1000000
+    step_output = False
+    order_output = False
+    neg_balance = True
+    lot_size = 100000
+    record_balance = True
+
+
+global_settings = GlobalSettings()
+
+
+class GlobalData:
+    price_data = None
+    ask_data = None
+    bid_data = None
+    indicators = {}
+    prop_list = []
+
+
+global_data = GlobalData()
 
 
 def to_curr(object):
     if isinstance(object, float):
-        return int(round(object * 10**precision))
+        return int(round(object * 10**global_settings.precision))
     elif isinstance(object, list):
-        return [int(round(x * 10**precision)) for x in object]
+        return [int(round(x * 10**global_settings.precision)) for x in object]
     else:
-        raise Exception(f"{type(amount)} should not be in to_curr")
+        obj_type = type(global_settings.amount)
+        raise Exception(f"{obj_type} is not allowed in to_curr")
 
 
 def from_curr(object):
     if isinstance(object, int):
-        return object / 10**precision
+        return object / 10**global_settings.precision
     elif isinstance(object, list):
-        return [x / 10**precision for x in object]
+        return [x / 10**global_settings.precision for x in object]
     else:
         raise Exception(f"{type(object)} should not be in from_curr")
 
@@ -73,10 +85,10 @@ def load_file(path):
     except FileNotFoundError:
         df = pd.read_csv(path, sep="\t")
         df = generate_bidask_file(bidask_path, df)
-    global price_data, ask_data, bid_data
-    price_data = to_curr(list(df["<CLOSE>"]))[-amount:]
-    ask_data = to_curr(list(df["ASK"])[-amount:])
-    bid_data = to_curr(list(df["BID"])[-amount:])
+    amount = global_settings.amount
+    global_data.price_data = to_curr(list(df["<CLOSE>"]))[-amount:]
+    global_data.ask_data = to_curr(list(df["ASK"])[-amount:])
+    global_data.bid_data = to_curr(list(df["BID"])[-amount:])
 
 
 def add_from_template(template):
@@ -86,15 +98,16 @@ def add_from_template(template):
     simulations.append(new_sim)
 
 
-def _global_init(sharedvars):
-    for name, obj in sharedvars.items():
-        globals()[name] = obj
+def _global_init(p_global_settings, p_global_data):
+    global global_settings, global_data
+    global_settings = p_global_settings
+    global_data = p_global_data
 
 
 def _run_simulation(sim):
     sim.run()
-    if prop_list:
-        sim.print_props(prop_list)
+    if global_data.prop_list:
+        sim.print_props(global_data.prop_list)
     return sim
 
 
@@ -102,38 +115,24 @@ def run_all(p_prop_list=[], jobs=None):
 
     print("Running simulations")
 
-    global prop_list
-    prop_list = p_prop_list
+    global_data.prop_list = p_prop_list
 
+    # running simulations with many processes
+    time1 = time.time()
     if jobs is None or jobs > 1:
-
-        # selecting what variables to copy to other processes
-        globals_dict = globals().copy()
-        allowed_types = [list, dict, bool, int]
-        filtered_by_type = {k: v for (k, v) in globals_dict.items()
-                            if type(v) in allowed_types}
-        filtered_by_name = {k: v for (k, v) in filtered_by_type.items()
-                            if not k.startswith("__") and k[0].islower()}
-        copiedvars = filtered_by_name  # name is a bit too long
-
-        # running simulations with many processes
-        time1 = time.time()
-        with multiprocessing.Pool(jobs, _global_init, (copiedvars,)) as pool:
+        with multiprocessing.Pool(
+            jobs,
+            _global_init,
+            (global_settings, global_data)
+        ) as pool:
             global simulations
             simulations = pool.map(_run_simulation, simulations)
-        time2 = time.time()
-        time_passed = time2 - time1
-        print(f"Time: {time_passed}s")
-
     else:
-
-        # running simulations in one process
-        time1 = time.time()
         for sim in simulations:
             _run_simulation(sim)
-        time2 = time.time()
-        time_passed = time2 - time1
-        print(f"Time: {time_passed}s")
+    time2 = time.time()
+    time_passed = time2 - time1
+    print(f"Time: {time_passed}s")
 
 
 def create_grid(list1, list2, f):
@@ -163,7 +162,8 @@ class Order:
             pricediff = price - self.open_price
         else:
             pricediff = self.open_price - price
-        return int(round(self.amount * from_curr(pricediff), precision))
+        return int(round(self.amount * from_curr(pricediff),
+                         global_settings.precision))
 
     def margin(self, price, leverage):
         return calculate_margin(self.amount, price, leverage)
@@ -178,7 +178,7 @@ class Order:
             SL_hit = (self.stop_loss > 0 and price >= self.stop_loss)
             TP_hit = (self.take_profit > 0 and price <= self.take_profit)
         result = SL_hit or TP_hit
-        if order_output:
+        if global_settings.order_output:
             if result:
                 print(f"type {self.type} "
                       f"sl {self.stop_loss} "
@@ -210,13 +210,13 @@ class Simulation:
         self.hedge = hedge
 
     def price(self, lookback=0):
-        return price_data[self.index - lookback]
+        return global_data.price_data[self.index - lookback]
 
     def ask_price(self, lookback=0):
-        return ask_data[self.index - lookback]
+        return global_data.ask_data[self.index - lookback]
 
     def bid_price(self, lookback=0):
-        return bid_data[self.index - lookback]
+        return global_data.bid_data[self.index - lookback]
 
     def floating_PL(self):
         return sum([order.calculate_floating_PL(self.price())
@@ -242,13 +242,13 @@ class Simulation:
             bid_or_ask_price = self.bid_price()
             str = "SELL"
         price = self.price() if self.ignore_spread else bid_or_ask_price
-        amount = to_curr(lots * lot_size)
+        amount = to_curr(lots * global_settings.lot_size)
         margin = calculate_margin(amount, price, self.leverage)
-        if not neg_balance and margin > self.free_margin():
+        if not global_settings.neg_balance and margin > self.free_margin():
             raise Exception(f"Not enough free margin to {str}")
         new_order = Order(amount, price, order_type, stop_loss, take_profit)
         self.orders.append(new_order)
-        if order_output:
+        if global_settings.order_output:
             print(str)
         return new_order
 
@@ -285,11 +285,11 @@ class Simulation:
     def close_order(self, order):
         self.balance += order.calculate_floating_PL(self.price())
         self.orders.remove(order)
-        if order_output:
+        if global_settings.order_output:
             print("CLOSE")
 
     def advance(self):
-        if self.index < len(price_data):
+        if self.index < len(global_data.price_data):
             self.record()
             self.output()
             self.SLTP()
@@ -303,10 +303,10 @@ class Simulation:
         # creating missing indicators
         ma1_name = f"ma{self.ma1}"
         ma2_name = f"ma{self.ma2}"
-        if ma1_name not in indicators:
-            indicators[ma1_name] = MovingAverage(self.ma1)
-        if ma2_name not in indicators:
-            indicators[ma2_name] = MovingAverage(self.ma2)
+        if ma1_name not in global_data.indicators:
+            global_data.indicators[ma1_name] = MovingAverage(self.ma1)
+        if ma2_name not in global_data.indicators:
+            global_data.indicators[ma2_name] = MovingAverage(self.ma2)
 
     def run(self):
         self.init()
@@ -314,7 +314,7 @@ class Simulation:
             pass
 
     def record(self):
-        if record_balance:
+        if global_settings.record_balance:
             self.balance_record.append(self.balance)
         pass
 
@@ -322,13 +322,13 @@ class Simulation:
         for order_i in range(len(self.orders) - 1, -1, -1):
             if(self.orders[order_i].should_close(self.price())):
                 self.close_order(self.orders[order_i])
-                if order_output:
+                if global_settings.order_output:
                     print("___SLTP___")
 
     def action(self):
         if(self.index > 0):
-            ma1 = indicators[f"ma{self.ma1}"]
-            ma2 = indicators[f"ma{self.ma2}"]
+            ma1 = GlobalData.indicators[f"ma{self.ma1}"]
+            ma2 = GlobalData.indicators[f"ma{self.ma2}"]
             cross_above, cross_below = detect_cross(ma1, ma2, self.index)
             if len(self.orders) == 0:
                 if(cross_below):
@@ -337,7 +337,7 @@ class Simulation:
                     self.buy(0.01, sl=self.sl_range, tp=self.tp_range)
 
     def output(self):
-        if step_output:
+        if global_settings.step_output:
             print(
                 f"Name: {self.name} "
                 f"Bar: {self.index} "

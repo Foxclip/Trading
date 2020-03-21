@@ -19,7 +19,8 @@ class MovingAverage(Indicator):
     def __init__(self, length):
         Indicator.__init__(self)
         self.length = length
-        self.data = utils.moving_average(simulation.price_data, self.length)
+        self.data = utils.moving_average(simulation.global_data.price_data,
+                                         self.length)
 
 
 def detect_cross(ma1, ma2, offset):
