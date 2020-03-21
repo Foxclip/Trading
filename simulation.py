@@ -163,7 +163,7 @@ class Order:
             pricediff = price - self.open_price
         else:
             pricediff = self.open_price - price
-        return int(self.amount * from_curr(pricediff))
+        return int(round(self.amount * from_curr(pricediff), precision))
 
     def margin(self, price, leverage):
         return calculate_margin(self.amount, price, leverage)
@@ -341,12 +341,12 @@ class Simulation:
             print(
                 f"Name: {self.name} "
                 f"Bar: {self.index} "
-                f"Price: {from_curr(self.price(), precision)} "
-                f"Balance: {from_curr(self.balance, precision)} "
-                f"Equity: {from_curr(self.equity(), precision)} "
-                f"FPL: {from_curr(self.floating_PL(), precision)} "
-                f"um: {from_curr(self.used_margin(), precision)} "
-                f"fm: {from_curr(self.free_margin(), precision)}"
+                f"Price: {from_curr(self.price())} "
+                f"Balance: {from_curr(self.balance)} "
+                f"Equity: {from_curr(self.equity())} "
+                f"FPL: {from_curr(self.floating_PL())} "
+                f"um: {from_curr(self.used_margin())} "
+                f"fm: {from_curr(self.free_margin())}"
             )
 
     def print_props(self, prop_list):

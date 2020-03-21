@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     # settings
     simulation.precision = 5
-    simulation.amount = 10**4
+    simulation.amount = 10**5
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -50,3 +50,5 @@ if __name__ == "__main__":
         list(range(1, 41)), list(range(1, 41)),
         "ma1", "ma2"
     )
+
+    # single_sim(main_template)
