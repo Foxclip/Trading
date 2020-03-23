@@ -1,27 +1,30 @@
 import simulation
 from simulation import to_curr
 import plot
+import sys
 
 
 def single_sim(template, diff=None, resolution=None):
     simulation.global_settings.record_balance = True
     simulation.add_from_template(template)
     simulation.run_all(jobs=1)
-    plot.plot_balance(diff=diff, resolution=resolution)
+    if len(sys.argv) == 1 or sys.argv[1] != "--noplot":
+        plot.plot_balance(diff=diff, resolution=resolution)
 
 
 def grid_search(f, lst1, lst2, xlabel, ylabel):
     simulation.global_settings.record_balance = False
     simulation.create_grid(lst1, lst2, f)
     simulation.run_all(["name", "balance"], jobs=None)
-    plot.balance_surface_plot(lst1, lst2, xlabel=xlabel, ylabel=ylabel)
+    if len(sys.argv) == 1 or sys.argv[1] != "--noplot":
+        plot.balance_surface_plot(lst1, lst2, xlabel=xlabel, ylabel=ylabel)
 
 
 if __name__ == "__main__":
 
     # settings
     simulation.global_settings.precision = 5
-    simulation.global_settings.amount = 10**4
+    simulation.global_settings.amount = 10**6
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -38,17 +41,17 @@ if __name__ == "__main__":
         "name": "Untitled"
     }
 
-    # creating simulations
-    def create_sim(ma1, ma2):
-        template = main_template.copy()
-        template["name"] = f"{ma1} {ma2}"
-        template["ma1"] = ma1
-        template["ma2"] = ma2
-        simulation.add_from_template(template)
-    grid_search(
-        create_sim,
-        list(range(1, 41)), list(range(1, 41)),
-        "ma1", "ma2"
-    )
+    # # creating simulations
+    # def create_sim(ma1, ma2):
+    #     template = main_template.copy()
+    #     template["name"] = f"{ma1} {ma2}"
+    #     template["ma1"] = ma1
+    #     template["ma2"] = ma2
+    #     simulation.add_from_template(template)
+    # grid_search(
+    #     create_sim,
+    #     list(range(1, 41)), list(range(1, 41)),
+    #     "ma1", "ma2"
+    # )
 
-    # single_sim(main_template)
+    single_sim(main_template)

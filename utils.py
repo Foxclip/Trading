@@ -1,4 +1,5 @@
 import numpy as np
+from numba.typed import List
 
 
 def moving_average(lst, length, left_pad=True):
@@ -18,3 +19,9 @@ def copydict(d, manager_d):
 def copylist(l, manager_l):
     for v in l:
         manager_l.append(v)
+
+
+def to_typed_list(lst):
+    typed_lst = List()
+    [typed_lst.append(x) for x in lst]
+    return typed_lst

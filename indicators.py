@@ -1,5 +1,6 @@
 import simulation
 import utils
+from numba import njit
 
 
 class Indicator:
@@ -9,9 +10,6 @@ class Indicator:
 
     def calculate(self):
         raise NotImplementedError()
-
-    def __getitem__(self, offset):
-        return self.data[offset]
 
 
 class MovingAverage(Indicator):
@@ -23,15 +21,16 @@ class MovingAverage(Indicator):
                                          self.length)
 
 
-def detect_cross(ma1, ma2, offset):
-    v1 = ma1[offset - 1]
-    v2 = ma2[offset - 1]
-    v1p = ma1[offset - 2]
-    v2p = ma2[offset - 2]
-    ma1_not_above_ma2 = v1 - v2 <= 0
-    it_was_above_ma2 = v1p - v2p > 0
-    ma1_not_below_ma2 = v1 - v2 >= 0
-    it_was_below_ma2 = v1p - v2p < 0
-    cross_above = ma1_not_above_ma2 and it_was_above_ma2
-    cross_below = ma1_not_below_ma2 and it_was_below_ma2
+@njit
+def detect_cross(lst1, lst2, offset):
+    v1 = lst1[offset - 1]
+    v2 = lst2[offset - 1]
+    v1p = lst1[offset - 2]
+    v2p = lst2[offset - 2]
+    lst1_not_above_lst2 = v1 - v2 <= 0
+    it_was_above_lst2 = v1p - v2p > 0
+    lst1_not_below_lst2 = v1 - v2 >= 0
+    it_was_below_lst2 = v1p - v2p < 0
+    cross_above = lst1_not_above_lst2 and it_was_above_lst2
+    cross_below = lst1_not_below_lst2 and it_was_below_lst2
     return cross_above, cross_below

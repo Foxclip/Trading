@@ -6,6 +6,8 @@ import os
 import multiprocessing
 from indicators import detect_cross
 from indicators import MovingAverage
+from numba import njit
+from numba.typed import List
 
 
 simulations = []
@@ -35,11 +37,22 @@ class GlobalData:
 global_data = GlobalData()
 
 
+@njit
+def _to_curr(lst, precision):
+    return [int(round(x * 10**precision)) for x in lst]
+
+
+def to_typed_list(lst):
+    typed_lst = List()
+    [typed_lst.append(x) for x in lst]
+    return typed_lst
+
+
 def to_curr(object):
     if isinstance(object, float):
         return int(round(object * 10**global_settings.precision))
     elif isinstance(object, list):
-        return [int(round(x * 10**global_settings.precision)) for x in object]
+        return _to_curr(to_typed_list(object), global_settings.precision)
     else:
         obj_type = type(global_settings.amount)
         raise Exception(f"{obj_type} is not allowed in to_curr")
@@ -329,7 +342,8 @@ class Simulation:
         if(self.index > 0):
             ma1 = GlobalData.indicators[f"ma{self.ma1}"]
             ma2 = GlobalData.indicators[f"ma{self.ma2}"]
-            cross_above, cross_below = detect_cross(ma1, ma2, self.index)
+            cross_above, cross_below = detect_cross(ma1.data, ma2.data,
+                                                    self.index)
             if len(self.orders) == 0:
                 if(cross_below):
                     self.sell(0.01, sl=self.sl_range, tp=self.tp_range)
