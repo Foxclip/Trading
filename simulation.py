@@ -340,8 +340,8 @@ class Simulation:
 
     def action(self):
         if(self.index > 0):
-            ma1 = GlobalData.indicators[f"ma{self.ma1}"]
-            ma2 = GlobalData.indicators[f"ma{self.ma2}"]
+            ma1 = global_data.indicators[f"ma{self.ma1}"]
+            ma2 = global_data.indicators[f"ma{self.ma2}"]
             cross_above, cross_below = detect_cross(ma1.data, ma2.data,
                                                     self.index)
             if len(self.orders) == 0:
