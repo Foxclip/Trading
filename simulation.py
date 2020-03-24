@@ -30,6 +30,9 @@ class GlobalData:
     price_data = None
     ask_data = None
     bid_data = None
+    dayofweek_data = None
+    hour_data = None
+    minute_data = None
     indicators = {}
     prop_list = []
 
@@ -71,37 +74,53 @@ def calculate_margin(amount, price, leverage):
     return int(amount * from_curr(price)) // leverage
 
 
-def generate_bidask_file(bidask_path, df):
-    print("Generating bid/ask file")
+def generate_file(path, df):
+    print("Generating file")
     price_data = to_curr(list(df["<CLOSE>"]))
     ask_data = []
     bid_data = []
     for bar_i in range(len(price_data)):
+        if(bar_i % 1000 == 0):
+            percent = round(bar_i / len(price_data) * 100, 1)
+            print(f"{bar_i}/{len(price_data)} ({percent}%)", end='\r')
         price = price_data[bar_i]
         spread = df["<SPREAD>"][bar_i]
         spread_half = math.ceil(spread / 2)
         ask_data.append(price + spread_half)
         bid_data.append(price - spread_half)
+    print()
+    print("Converting timestamps")
+    timestamps = pd.to_datetime(df["<TIME>"])
+    print("Creating columns")
     df["ASK"] = from_curr(ask_data)
     df["BID"] = from_curr(bid_data)
-    df.to_csv(bidask_path, index=False, sep="\t")
+    df["DAYOFWEEK"] = timestamps.dt.dayofweek
+    df["HOUR"] = timestamps.dt.hour
+    df["MINUTE"] = timestamps.dt.minute
+    print("Filtering")
+    df = df.filter(["<CLOSE>", "ASK", "BID", "DAYOFWEEK", "HOUR", "MINUTE"])
+    print("Saving to file")
+    df.to_csv(path, index=False, sep="\t")
     return df
 
 
 def load_file(path):
     print("Reading CSV")
     path_name, path_ext = os.path.splitext(path)
-    bidask_path = f"{path_name}_bidask{path_ext}"
+    generated_path = f"{path_name}_gen{path_ext}"
     df = None
     try:
-        df = pd.read_csv(bidask_path, sep="\t")
+        df = pd.read_csv(generated_path, sep="\t")
     except FileNotFoundError:
         df = pd.read_csv(path, sep="\t")
-        df = generate_bidask_file(bidask_path, df)
+        df = generate_file(generated_path, df)
     amount = global_settings.amount
     global_data.price_data = to_curr(list(df["<CLOSE>"]))[-amount:]
     global_data.ask_data = to_curr(list(df["ASK"])[-amount:])
     global_data.bid_data = to_curr(list(df["BID"])[-amount:])
+    global_data.dayofweek_data = list(df["DAYOFWEEK"])[-amount:]
+    global_data.hour_data = list(df["HOUR"])[-amount:]
+    global_data.minute_data = list(df["MINUTE"])[-amount:]
 
 
 def add_from_template(template):

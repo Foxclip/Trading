@@ -1,40 +1,21 @@
-import math
-import statistics
-import numpy as np
+import pandas as pd
+import time
 
+time1 = time.time()
+df = pd.read_csv("EURUSD_i_M1_201706131104_202002240839.csv", sep="\t")
+time2 = time.time()
+elapsed = time2 - time1
+print(f"Opening: {elapsed}s")
 
-def deriv(lst, batch_count):
-    batch_size = math.floor(len(lst) / batch_count)
-    print(batch_size)
-    deriv_lst = []
-    for batch_i in range(batch_count):
-        start = batch_i * batch_size
-        end = start + batch_size
-        if end >= len(lst):
-            end = len(lst) - 1
-        deriv = (lst[end] - lst[start]) / batch_size
-        deriv_lst.append(deriv)
-    return deriv_lst
-
-
-def moving_average(lst, count):
-    avg_lst = []
-    for i in range(len(lst) - count + 1):
-        batch = lst[i:i + count]
-        avg = statistics.mean(batch)
-        avg_lst.append(avg)
-    return avg_lst
-
-
-def ma(x, N):
-    cumsum = np.cumsum(np.insert(x, 0, 0))
-    return (cumsum[N:] - cumsum[:-N]) / float(N)
-
-
-lst = []
-for i in range(10):
-    lst.append(i ** 2)
-print(lst)
-# print(deriv(lst, 3))
-# print(moving_average(lst, 3))
-print(ma(lst, 2))
+time1 = time.time()
+tm = pd.to_datetime(df["<TIME>"].iloc[-1])
+print(tm)
+time_column = pd.to_datetime(df["<TIME>"])
+print(time_column)
+print(time_column.dt.dayofweek)
+print(time_column.iloc[-1].dayofweek)
+print(time_column.iloc[-1].hour)
+print(time_column.iloc[-1].minute)
+time2 = time.time()
+elapsed = time2 - time1
+print(f"Converting: {elapsed}s")
