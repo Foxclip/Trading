@@ -84,14 +84,14 @@ def generate_file(path, df):
         bid_data.append(price - spread_half)
     print()
     print("Converting timestamps")
-    timestamps = pd.to_datetime(df["<TIME>"])
+    combined_datetime = df["<DATE>"] + " " + df["<TIME>"]
+    timestamps = pd.to_datetime(combined_datetime)
     print("Creating columns")
     df["ASK"] = from_curr(ask_data)
     df["BID"] = from_curr(bid_data)
     df["DAYOFWEEK"] = timestamps.dt.dayofweek
     df["HOUR"] = timestamps.dt.hour
     df["MINUTE"] = timestamps.dt.minute
-    print("Filtering")
     df = df.filter(["<CLOSE>", "ASK", "BID", "DAYOFWEEK", "HOUR", "MINUTE"])
     print("Saving to file")
     df.to_csv(path, index=False, sep="\t")
@@ -215,9 +215,8 @@ class Order:
 class Simulation:
 
     def __init__(self, balance=0.0, ma_length=10, ignore_spread=False,
-                 sl_range=20, tp_range=20,
-                 ma1=1, ma2=10,
-                 leverage=500, hedge=False, name="Untitled"):
+                 sl_range=20, tp_range=20, ma1=1, ma2=10, leverage=500,
+                 hedge=False, weekend_closing=False, name="Untitled"):
         self.index = 0
         self.orders = []
         self.balance_record = []
@@ -225,11 +224,12 @@ class Simulation:
         self.ignore_spread = ignore_spread
         self.sl_range = sl_range
         self.tp_range = tp_range
-        self.name = name
         self.ma1 = ma1
         self.ma2 = ma2
         self.leverage = leverage
         self.hedge = hedge
+        self.weekend_closing = weekend_closing
+        self.name = name
 
     def price(self, lookback=0):
         return global_data.price_data[self.index - lookback]
@@ -255,6 +255,15 @@ class Simulation:
 
     def free_margin(self):
         return self.equity() - self.used_margin()
+
+    def dayofweek(self):
+        return global_data.dayofweek_data[self.index]
+
+    def hour(self):
+        return global_data.hour_data[self.index]
+
+    def minute(self):
+        return global_data.minute_data[self.index]
 
     def _buy_or_sell(self, lots, stop_loss, take_profit, order_type):
         if order_type == OrderType.BUY:
@@ -348,12 +357,25 @@ class Simulation:
                     print("___SLTP___")
 
     def action(self):
+
         if(self.index > 0):
+
+            # trading two moving averages
             ma1 = global_data.indicators[f"ma{self.ma1}"]
             ma2 = global_data.indicators[f"ma{self.ma2}"]
+
+            # closing all orders before the weekend
+            weekend_time = self.dayofweek() == 4 and self.hour() == 23
+            if self.weekend_closing and weekend_time:
+                for order in self.orders:
+                    self.close_order(order)
+                return
+
+            # trading
             cross_above, cross_below = detect_cross(ma1.data, ma2.data,
                                                     self.index)
             if len(self.orders) == 0:
+                # yes, in reverse order
                 if(cross_below):
                     self.sell(0.01, sl=self.sl_range, tp=self.tp_range)
                 if(cross_above):
