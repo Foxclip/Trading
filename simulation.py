@@ -7,7 +7,7 @@ import multiprocessing
 from indicators import detect_cross
 from indicators import MovingAverage
 from numba import njit
-from numba.typed import List
+import utils
 
 
 simulations = []
@@ -45,17 +45,11 @@ def _to_curr(lst, precision):
     return [int(round(x * 10**precision)) for x in lst]
 
 
-def to_typed_list(lst):
-    typed_lst = List()
-    [typed_lst.append(x) for x in lst]
-    return typed_lst
-
-
 def to_curr(object):
     if isinstance(object, float):
         return int(round(object * 10**global_settings.precision))
     elif isinstance(object, list):
-        return _to_curr(to_typed_list(object), global_settings.precision)
+        return _to_curr(utils.to_typed_list(object), global_settings.precision)
     else:
         obj_type = type(global_settings.amount)
         raise Exception(f"{obj_type} is not allowed in to_curr")
@@ -144,12 +138,8 @@ def _run_simulation(sim):
 
 
 def run_all(p_prop_list=[], jobs=None):
-
     print("Running simulations")
-
     global_data.prop_list = p_prop_list
-
-    # running simulations with many processes
     time1 = time.time()
     if jobs is None or jobs > 1:
         with multiprocessing.Pool(
