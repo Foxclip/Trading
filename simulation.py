@@ -4,6 +4,7 @@ import math
 import time
 import os
 import multiprocessing
+import itertools
 from indicators import detect_cross
 from indicators import MovingAverage
 from numba import njit
@@ -157,10 +158,16 @@ def run_all(p_prop_list=[], jobs=None):
     print(f"Time: {time_passed}s")
 
 
-def create_grid(list1, list2, f):
-    for l2 in list2:
-        for l1 in list1:
-            f(l1, l2)
+def create_grid(lists, f):
+    if len(lists) <= 1:
+        raise ValueError("Should be at least two lists")
+    elif len(lists) == 2:
+        for l2 in lists[1]:
+            for l1 in lists[0]:
+                f(l1, l2)
+    else:
+        for combination in itertools.product(*lists):
+            f(*combination)
 
 
 class OrderType(enum.Enum):
@@ -394,13 +401,17 @@ class Simulation:
                 f"fm: {from_curr(self.free_margin())}"
             )
 
-    def print_props(self, prop_list):
+    def get_prop_str(self, prop_list):
+        result = ""
         for prop_name in prop_list:
             prop_value = getattr(self, prop_name)
             if prop_name == "balance":
                 prop_value = from_curr(self.balance)
             if prop_name == "name":
-                print(f"{prop_value}", end=' ')
+                result += f"{prop_value} "
                 continue
-            print(f"{prop_name}:{prop_value}", end=' ')
-        print()
+            result += f"{prop_name}:{prop_value} "
+        return result
+
+    def print_props(self, prop_list):
+        print(self.get_prop_str(prop_list))
