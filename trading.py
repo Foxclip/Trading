@@ -65,7 +65,7 @@ if __name__ == "__main__":
         "name": "Untitled"
     }
 
-    # single_sim(main_template)
+    sim_list([main_template])
 
     # template1 = main_template.copy()
     # template1["name"] = "No closing"
@@ -76,16 +76,16 @@ if __name__ == "__main__":
     #
     # sim_list([template1, template2])
 
-    # creating simulations
-    def create_sim(ma1, ma2):
-        template = main_template.copy()
-        template["name"] = f"{ma1} {ma2}"
-        template["ma1"] = ma1
-        template["ma2"] = ma2
-        simulation.add_from_template(template)
-    grid_search(
-        create_sim,
-        [list(range(1, 11)), list(range(1, 11))],
-        "ma1", "ma2",
-        sorted_count=10
-    )
+    # # creating simulations
+    # def create_sim(ma1, ma2):
+    #     template = main_template.copy()
+    #     template["name"] = f"{ma1} {ma2}"
+    #     template["ma1"] = ma1
+    #     template["ma2"] = ma2
+    #     simulation.add_from_template(template)
+    # grid_search(
+    #     create_sim,
+    #     [list(range(1, 11)), list(range(1, 11))],
+    #     "ma1", "ma2",
+    #     sorted_count=10
+    # )

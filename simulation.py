@@ -142,13 +142,15 @@ def run_all(p_prop_list=[], jobs=None):
     print("Running simulations")
     global_data.prop_list = p_prop_list
     time1 = time.time()
-    if jobs is None or jobs > 1:
+    global simulations
+    if (jobs is None or jobs > 1) and len(simulations) > 1:
+        if len(simulations) < 4:
+            jobs = len(simulations)
         with multiprocessing.Pool(
             jobs,
             _global_init,
             (global_settings, global_data)
         ) as pool:
-            global simulations
             simulations = pool.map(_run_simulation, simulations)
     else:
         for sim in simulations:
