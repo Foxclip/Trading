@@ -5,10 +5,9 @@ import time
 import os
 import multiprocessing
 import itertools
-from indicators import detect_cross
-from indicators import MovingAverage
 from numba import njit
 import utils
+from strategies import moving_averages
 
 
 simulations = []
@@ -126,6 +125,7 @@ def add_from_template(template):
 
 
 def _global_init(p_global_settings, p_global_data):
+    print(f"Starting process {multiprocessing.current_process().name}")
     global global_settings, global_data
     global_settings = p_global_settings
     global_data = p_global_data
@@ -338,13 +338,7 @@ class Simulation:
             return False
 
     def init(self):
-        # creating missing indicators
-        ma1_name = f"ma{self.ma1}"
-        ma2_name = f"ma{self.ma2}"
-        if ma1_name not in global_data.indicators:
-            global_data.indicators[ma1_name] = MovingAverage(self.ma1)
-        if ma2_name not in global_data.indicators:
-            global_data.indicators[ma2_name] = MovingAverage(self.ma2)
+        pass
 
     def run(self):
         self.init()
@@ -364,29 +358,7 @@ class Simulation:
                     print("___SLTP___")
 
     def action(self):
-
-        if(self.index > 0):
-
-            # trading two moving averages
-            ma1 = global_data.indicators[f"ma{self.ma1}"]
-            ma2 = global_data.indicators[f"ma{self.ma2}"]
-
-            # closing all orders before the weekend
-            weekend_time = self.dayofweek() == 4 and self.hour() == 23
-            if self.weekend_closing and weekend_time:
-                for order in self.orders:
-                    self.close_order(order)
-                return
-
-            # trading
-            cross_above, cross_below = detect_cross(ma1.data, ma2.data,
-                                                    self.index)
-            if len(self.orders) == 0:
-                # yes, in reverse order
-                if(cross_below):
-                    self.sell(0.01, sl=self.sl_range, tp=self.tp_range)
-                if(cross_above):
-                    self.buy(0.01, sl=self.sl_range, tp=self.tp_range)
+        moving_averages(self)
 
     def output(self):
         if global_settings.step_output:

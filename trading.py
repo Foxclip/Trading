@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     # settings
     simulation.global_settings.precision = 5
-    simulation.global_settings.amount = 10**4
+    simulation.global_settings.amount = 10**5
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -77,16 +77,15 @@ if __name__ == "__main__":
     # sim_list([template1, template2])
 
     # creating simulations
-    def create_sim(ma1, ma2, sl):
+    def create_sim(ma1, ma2):
         template = main_template.copy()
-        template["name"] = f"{ma1} {ma2} {sl}"
+        template["name"] = f"{ma1} {ma2}"
         template["ma1"] = ma1
         template["ma2"] = ma2
-        template["sl_range"] = sl
         simulation.add_from_template(template)
     grid_search(
         create_sim,
-        [list(range(1, 21)), list(range(1, 21)), [400, 500]],
+        [list(range(1, 11)), list(range(1, 11))],
         "ma1", "ma2",
         sorted_count=10
     )
