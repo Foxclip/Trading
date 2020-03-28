@@ -1,5 +1,6 @@
 import simulation
-from indicators import detect_cross, MovingAverage
+from indicators import detect_cross
+from indicators import MovingAverage, MACD
 
 
 def moving_averages(sim):
@@ -36,3 +37,8 @@ def moving_averages(sim):
                 sim.sell(0.01, sl=sim.sl_range, tp=sim.tp_range)
             if(cross_above):
                 sim.buy(0.01, sl=sim.sl_range, tp=sim.tp_range)
+
+
+def macd(sim):
+
+    MACD(12, 26, 9)
