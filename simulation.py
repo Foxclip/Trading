@@ -7,7 +7,6 @@ import multiprocessing
 import itertools
 from numba import njit
 import utils
-from strategies import moving_averages
 
 
 simulations = []
@@ -21,6 +20,7 @@ class GlobalSettings:
     neg_balance = True
     lot_size = 100000
     record_balance = True
+    strategy = None
 
 
 global_settings = GlobalSettings()
@@ -360,7 +360,7 @@ class Simulation:
                     print("___SLTP___")
 
     def action(self):
-        moving_averages(self)
+        global_settings.strategy(self)
 
     def output(self):
         if global_settings.step_output:
