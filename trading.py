@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # settings
     simulation.global_settings.precision = 5
     simulation.global_settings.amount = 10**5
-    simulation.global_settings.strategy = strategies.macd
+    simulation.global_settings.strategy = strategies.moving_averages
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -63,6 +63,9 @@ if __name__ == "__main__":
         "tp_range": 100,
         "ma1": 1,
         "ma2": 10,
+        "macd_s": 12,
+        "macd_l": 26,
+        "macd_t": 9,
         "leverage": 500,
         "name": "Untitled"
     }

@@ -1,25 +1,14 @@
-import simulation
-from indicators import detect_cross
-from indicators import MovingAverage, MACD
+from indicators import detect_cross, get_ma
+from indicators import MACD
 
 
 def moving_averages(sim):
 
-    gd = simulation.global_data
-
-    # creating missing indicators
-    ma1_name = f"ma{sim.ma1}"
-    ma2_name = f"ma{sim.ma2}"
-    if ma1_name not in gd.indicators:
-        gd.indicators[ma1_name] = MovingAverage(sim.ma1)
-    if ma2_name not in gd.indicators:
-        gd.indicators[ma2_name] = MovingAverage(sim.ma2)
-
     if(sim.index > 0):  # skipping first bar
 
         # trading two moving averages
-        ma1 = gd.indicators[f"ma{sim.ma1}"]
-        ma2 = gd.indicators[f"ma{sim.ma2}"]
+        ma1 = get_ma(sim.ma1)
+        ma2 = get_ma(sim.ma2)
 
         # closing all orders before the weekend
         weekend_time = sim.dayofweek() == 4 and sim.hour() == 23

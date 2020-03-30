@@ -4,10 +4,23 @@ import numpy as np
 from numba import njit
 
 
+indicators = {}
+
+
 def calc_ma(length, data=None):
     if data is None:
         data = simulation.global_data.price_data
     return utils.moving_average(data, length)
+
+
+def get_ma(length):
+    ma_name = f"ma{length}"
+    if ma_name not in indicators:
+        ma = MovingAverage(length)
+        indicators[ma_name] = ma
+        return ma
+    else:
+        return indicators[ma_name]
 
 
 class Indicator:
@@ -39,18 +52,6 @@ class MACD(Indicator):
         short_ma[:long - 1] = np.zeros(long - 1)
         diff = long_ma - short_ma
         self.data = calc_ma(third, diff)
-        import matplotlib.pyplot as plt
-        # plt.plot(short_ma[:30])
-        # plt.plot(long_ma[:30])
-        plt.plot(diff)
-        plt.plot(self.data)
-        # plt.plot(simulation.global_data.price_data)
-        # plt.plot(calc_ma(short)[1000:1100])
-        # plt.plot(calc_ma(long)[1000:1100])
-        # plt.plot(calc_ma(calc_ma(long) - calc_ma(short))[1000:2000])
-        plt.show()
-        import sys
-        sys.exit(0)
 
 
 @njit

@@ -33,7 +33,6 @@ class GlobalData:
     dayofweek_data = None
     hour_data = None
     minute_data = None
-    indicators = {}
     prop_list = []
 
 
@@ -224,8 +223,8 @@ class Order:
 class Simulation:
 
     def __init__(self, balance=0.0, ma_length=10, ignore_spread=False,
-                 sl_range=20, tp_range=20, ma1=1, ma2=10, leverage=500,
-                 hedge=False, weekend_closing=False, name="Untitled"):
+                 sl_range=20, tp_range=20, leverage=500, hedge=False,
+                 weekend_closing=False, name="Untitled"):
         self.index = 0
         self.orders = []
         self.balance_record = []
@@ -233,8 +232,6 @@ class Simulation:
         self.ignore_spread = ignore_spread
         self.sl_range = sl_range
         self.tp_range = tp_range
-        self.ma1 = ma1
-        self.ma2 = ma2
         self.leverage = leverage
         self.hedge = hedge
         self.weekend_closing = weekend_closing
