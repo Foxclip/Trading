@@ -23,6 +23,16 @@ def get_ma(length):
         return indicators[ma_name]
 
 
+def get_macd(short, long, third):
+    macd_name = f"macd_{short}_{long}_{third}"
+    if macd_name not in indicators:
+        macd = MACD(short, long, third)
+        indicators[macd_name] = macd
+        return macd
+    else:
+        return indicators[macd_name]
+
+
 class Indicator:
 
     def __init__(self):
@@ -47,8 +57,8 @@ class MACD(Indicator):
         self.short = short
         self.long = long
         self.third = third
-        short_ma = calc_ma(short)
-        long_ma = calc_ma(long)
+        short_ma = get_ma(short).data[:]
+        long_ma = get_ma(long).data
         short_ma[:long - 1] = np.zeros(long - 1)
         diff = long_ma - short_ma
         self.data = calc_ma(third, diff)
@@ -66,4 +76,17 @@ def detect_cross(lst1, lst2, offset):
     it_was_below_lst2 = v1p - v2p < 0
     cross_above = lst1_not_above_lst2 and it_was_above_lst2
     cross_below = lst1_not_below_lst2 and it_was_below_lst2
+    return cross_above, cross_below
+
+
+@njit
+def zero_cross(lst, offset):
+    v = lst[offset - 1]
+    vp = lst[offset - 2]
+    lst1_not_above_zero = v <= 0
+    it_was_above_zero = vp > 0
+    lst1_not_below_zero = v >= 0
+    it_was_below_zero = vp < 0
+    cross_above = lst1_not_above_zero and it_was_above_zero
+    cross_below = lst1_not_below_zero and it_was_below_zero
     return cross_above, cross_below
