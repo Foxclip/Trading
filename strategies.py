@@ -1,5 +1,6 @@
 from indicators import detect_cross, zero_cross
 from indicators import get_ma, get_macd
+from simulation import Direction
 
 
 def _weekend_close(sim):
@@ -11,26 +12,31 @@ def _weekend_close(sim):
     return False
 
 
+def _trade(sim, cross_above, cross_below):
+    normal_below = cross_below and sim.direction == Direction.NORMAL
+    normal_above = cross_above and sim.direction == Direction.NORMAL
+    reverse_below = cross_below and sim.direction == Direction.REVERSE
+    reverse_above = cross_above and sim.direction == Direction.REVERSE
+    if(normal_below or reverse_above):
+        sim.buy(0.01, sl=sim.sl_range, tp=sim.tp_range)
+    if(normal_above or reverse_below):
+        sim.sell(0.01, sl=sim.sl_range, tp=sim.tp_range)
+
+
 def moving_averages(sim):
 
-    if(sim.index > 0):  # skipping first bar
+    # getting indicators
+    ma1 = get_ma(sim.ma1)
+    ma2 = get_ma(sim.ma2)
 
-        # getting indicators
-        ma1 = get_ma(sim.ma1)
-        ma2 = get_ma(sim.ma2)
+    # closing all orders before the weekend
+    if _weekend_close(sim):
+        return
 
-        # closing all orders before the weekend
-        if _weekend_close(sim):
-            return
-
-        # trading
-        cross_above, cross_below = detect_cross(ma1.data, ma2.data, sim.index)
-        if len(sim.orders) == 0:
-            # yes, in reverse order
-            if(cross_below):
-                sim.sell(0.01, sl=sim.sl_range, tp=sim.tp_range)
-            if(cross_above):
-                sim.buy(0.01, sl=sim.sl_range, tp=sim.tp_range)
+    # trading
+    cross_above, cross_below = detect_cross(ma1.data, ma2.data, sim.index)
+    if len(sim.orders) == 0:
+        _trade(sim, cross_above, cross_below)
 
 
 def macd(sim):
@@ -45,7 +51,4 @@ def macd(sim):
     # trading
     cross_above, cross_below = zero_cross(macd.data, sim.index)
     if len(sim.orders) == 0:
-        if(cross_below):
-            sim.buy(0.01, sl=sim.sl_range, tp=sim.tp_range)
-        if(cross_above):
-            sim.sell(0.01, sl=sim.sl_range, tp=sim.tp_range)
+        _trade(sim, cross_above, cross_below)

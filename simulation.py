@@ -220,6 +220,11 @@ class Order:
         return result
 
 
+class Direction(enum.Enum):
+    NORMAL = 0
+    REVERSE = 1
+
+
 class Simulation:
 
     def __init__(self, balance=0.0, ma_length=10, ignore_spread=False,
@@ -235,6 +240,7 @@ class Simulation:
         self.leverage = leverage
         self.hedge = hedge
         self.weekend_closing = weekend_closing
+        self.direction = Direction.NORMAL
         self.name = name
 
     def price(self, lookback=0):

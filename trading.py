@@ -59,14 +59,15 @@ if __name__ == "__main__":
     main_template = {
         "balance": to_curr(100.0),
         "ignore_spread": False,
-        "sl_range": 400,
-        "tp_range": 100,
+        "sl_range": 100,
+        "tp_range": 400,
         "ma1": 1,
         "ma2": 10,
         "macd_s": 12,
         "macd_l": 26,
         "macd_t": 9,
         "leverage": 500,
+        "direction": simulation.Direction.REVERSE,
         "name": "Untitled"
     }
 
