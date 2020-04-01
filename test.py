@@ -1,21 +1,38 @@
-import pandas as pd
-import time
+import unittest
+import utils
 
-time1 = time.time()
-df = pd.read_csv("EURUSD_i_M1_201706131104_202002240839.csv", sep="\t")
-time2 = time.time()
-elapsed = time2 - time1
-print(f"Opening: {elapsed}s")
 
-time1 = time.time()
-tm = pd.to_datetime(df["<TIME>"].iloc[-1])
-print(tm)
-time_column = pd.to_datetime(df["<TIME>"])
-print(time_column)
-print(time_column.dt.dayofweek)
-print(time_column.iloc[-1].dayofweek)
-print(time_column.iloc[-1].hour)
-print(time_column.iloc[-1].minute)
-time2 = time.time()
-elapsed = time2 - time1
-print(f"Converting: {elapsed}s")
+class TestMovingAverage(unittest.TestCase):
+
+    def test_simple(self):
+        data = [1, 2, 3]
+        correct = [0.0, 1.5, 2.5]
+        result = list(utils.moving_average(data, 2))
+        self.assertListEqual(result, correct)
+
+    def test_zero_len(self):
+        data = []
+        correct = []
+        result = list(utils.moving_average(data, 0))
+        self.assertListEqual(result, correct)
+
+    def test_one_element(self):
+        data = [5]
+        correct = [5.0]
+        result = list(utils.moving_average(data, 1))
+        self.assertListEqual(result, correct)
+
+    def test_eq_len(self):
+        data = [1, 2, 3]
+        correct = [0.0, 0.0, 2.0]
+        result = list(utils.moving_average(data, 3))
+        self.assertListEqual(result, correct)
+
+    def test_bigger_len(self):
+        data = [1, 2, 3]
+        with self.assertRaises(ValueError):
+            result = list(utils.moving_average(data, 4))  # noqa
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -3,6 +3,9 @@ from numba.typed import List
 
 
 def moving_average(lst, length, left_pad=True):
+    if length > len(lst):
+        raise ValueError("Moving average window length is bigger than list "
+                         "length")
     cumsum = np.cumsum(np.insert(lst, 0, 0))
     result = (cumsum[length:] - cumsum[:-length]) / float(length)
     if left_pad:
