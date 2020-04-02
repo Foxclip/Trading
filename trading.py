@@ -49,7 +49,6 @@ if __name__ == "__main__":
     # settings
     simulation.global_settings.precision = 5
     simulation.global_settings.amount = 10**6
-    simulation.global_settings.strategy = strategies.macd
 
     # loading file
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
@@ -58,8 +57,8 @@ if __name__ == "__main__":
     main_template = {
         "balance": to_curr(100.0),
         "ignore_spread": False,
-        "sl_range": 100,
-        "tp_range": 400,
+        "sl_range": 400,
+        "tp_range": 100,
         "ma1": 1,
         "ma2": 10,
         "macd_s": 12,
@@ -67,6 +66,7 @@ if __name__ == "__main__":
         "macd_t": 9,
         "leverage": 500,
         "direction": simulation.Direction.REVERSE,
+        "strategy": strategies.moving_averages,
         "name": "Untitled"
     }
 

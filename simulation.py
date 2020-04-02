@@ -229,7 +229,8 @@ class Simulation:
 
     def __init__(self, balance=0.0, ma_length=10, ignore_spread=False,
                  sl_range=20, tp_range=20, leverage=500, hedge=False,
-                 weekend_closing=False, name="Untitled"):
+                 weekend_closing=False, direction=Direction.NORMAL,
+                 strategy=None, name="Untitled"):
         self.index = 0
         self.orders = []
         self.balance_record = []
@@ -240,7 +241,8 @@ class Simulation:
         self.leverage = leverage
         self.hedge = hedge
         self.weekend_closing = weekend_closing
-        self.direction = Direction.NORMAL
+        self.direction = direction
+        self.strategy = strategy
         self.name = name
 
     def price(self, lookback=0):
@@ -363,7 +365,7 @@ class Simulation:
                     print("___SLTP___")
 
     def action(self):
-        global_settings.strategy(self)
+        self.strategy(self)
 
     def output(self):
         if global_settings.step_output:
