@@ -14,7 +14,7 @@ def sim_list(template_list, diff=None, resolution=None):
     # running simulations
     simulation.run_all(["name", "balance"], jobs=None)
     # plotting results
-    if len(sys.argv) == 1 or sys.argv[1] != "--noplot":
+    if "--noplot" not in sys.argv:
         plot.plot_balance(diff=diff, resolution=resolution)
 
 
@@ -39,8 +39,7 @@ def grid_search(f, lists, xlabel, ylabel, sorted_count=0):
         file.write("\n")
     file.close()
     # plotting results if there are two parameter lists
-    plotting_enabled = len(sys.argv) == 1 or sys.argv[1] != "--noplot"
-    if plotting_enabled and len(lists) == 2:
+    if "--noplot" not in sys.argv and len(lists) == 2:
         plot.balance_surface_plot(lists[0], lists[1],
                                   xlabel=xlabel, ylabel=ylabel)
 
