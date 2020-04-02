@@ -3,6 +3,8 @@ import enum
 import math
 import time
 import os
+import sys
+import plot
 import multiprocessing
 import itertools
 from numba import njit
@@ -169,6 +171,45 @@ def create_grid(lists, f):
     else:
         for combination in itertools.product(*lists):
             f(*combination)
+
+
+def sim_list(template_list, diff=None, resolution=None, plot_enabled=True):
+    # settings
+    global_settings.record_balance = True
+    # creating simulations
+    for template in template_list:
+        add_from_template(template)
+    # running simulations
+    run_all(["name", "balance"], jobs=None)
+    # plotting results
+    if "--noplot" not in sys.argv and plot_enabled:
+        plot.plot_balance(diff=diff, resolution=resolution)
+
+
+def grid_search(f, lists, xlabel, ylabel, sorted_count=0, plot_enabled=True):
+    # settings
+    global_settings.record_balance = False
+    # creating simulations
+    create_grid(lists, f)
+    # running simulations
+    run_all(["name", "balance"], jobs=None)
+    # printing results
+    simulations_copy = simulations.copy()
+    simulations_copy.sort(key=lambda x: x.balance, reverse=True)
+    print("==============================================")
+    for sim in simulations_copy[:sorted_count]:
+        sim.print_props(["name", "balance"])
+    open("output.txt", "w")
+    file = open("output.txt", "a")
+    for sim_i in range(len(simulations_copy)):
+        sim = simulations_copy[sim_i]
+        file.write(f"<{sim_i + 1}> {sim.get_prop_str(['name', 'balance'])}")
+        file.write("\n")
+    file.close()
+    # plotting results if there are two parameter lists
+    if "--noplot" not in sys.argv and plot_enabled and len(lists) == 2:
+        plot.balance_surface_plot(lists[0], lists[1],
+                                  xlabel=xlabel, ylabel=ylabel)
 
 
 class OrderType(enum.Enum):

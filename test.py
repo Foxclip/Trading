@@ -1,5 +1,7 @@
 import unittest
 import utils
+import simulation
+import strategies
 
 
 class TestMovingAverage(unittest.TestCase):
@@ -32,6 +34,30 @@ class TestMovingAverage(unittest.TestCase):
         data = [1, 2, 3]
         with self.assertRaises(ValueError):
             result = list(utils.moving_average(data, 4))  # noqa
+
+
+class TestSimulation(unittest.TestCase):
+
+    def test_small(self):
+        simulation.global_settings.precision = 5
+        simulation.global_settings.amount = 10**4
+        simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
+        main_template = {
+            "balance": simulation.to_curr(100.0),
+            "ignore_spread": False,
+            "sl_range": 400,
+            "tp_range": 100,
+            "ma1": 1,
+            "ma2": 10,
+            "macd_s": 12,
+            "macd_l": 26,
+            "macd_t": 9,
+            "leverage": 500,
+            "direction": simulation.Direction.REVERSE,
+            "strategy": strategies.moving_averages,
+            "name": "Untitled"
+        }
+        sim_list([main_template])
 
 
 if __name__ == "__main__":
