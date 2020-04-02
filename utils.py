@@ -14,16 +14,6 @@ def moving_average(lst, length, left_pad=True):
     return result
 
 
-def copydict(d, manager_d):
-    for key in d.keys():
-        manager_d[key] = d[key]
-
-
-def copylist(l, manager_l):
-    for v in l:
-        manager_l.append(v)
-
-
 def to_typed_list(lst):
     typed_lst = List()
     [typed_lst.append(x) for x in lst]
