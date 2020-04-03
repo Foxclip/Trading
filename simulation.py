@@ -19,6 +19,7 @@ class GlobalSettings:
     amount = 1000000
     step_output = False
     order_output = False
+    record_orders = False
     neg_balance = True
     lot_size = 100000
     record_balance = True
@@ -173,17 +174,23 @@ def create_grid(lists, f):
             f(*combination)
 
 
-def sim_list(template_list, diff=None, resolution=None, plot_enabled=True):
+def sim_list(template_list, diff=None, resolution=None, plot_type=None):
     # settings
-    global_settings.record_balance = True
+    if plot_type == "balance":
+        global_settings.record_balance = True
+    elif plot_type == "orders":
+        global_settings.record_orders = True
     # creating simulations
     for template in template_list:
         add_from_template(template)
     # running simulations
     run_all(["name", "balance"], jobs=None)
     # plotting results
-    if "--noplot" not in sys.argv and plot_enabled:
-        plot.plot_balance(diff=diff, resolution=resolution)
+    if "--noplot" not in sys.argv and plot_type:
+        if plot_type == "balance":
+            plot.plot_balance(diff=diff, resolution=resolution)
+        elif plot_type == "orders":
+            plot.plot_orders()
 
 
 def grid_search(f, lists, xlabel, ylabel, sorted_count=0, plot_enabled=True):
@@ -275,6 +282,7 @@ class Simulation:
         self.index = 0
         self.orders = []
         self.balance_record = []
+        self.order_record = []
         self.balance = to_curr(balance)
         self.ignore_spread = ignore_spread
         self.sl_range = sl_range
@@ -328,6 +336,9 @@ class Simulation:
             bid_or_ask_price = self.bid_price()
             str = "SELL"
         price = self.price() if self.ignore_spread else bid_or_ask_price
+        if global_settings.record_orders:
+            record = (self.index, from_curr(price), order_type)
+            self.order_record.append(record)
         amount = to_curr(lots * global_settings.lot_size)
         margin = calculate_margin(amount, price, self.leverage)
         if not global_settings.neg_balance and margin > self.free_margin():
@@ -335,7 +346,7 @@ class Simulation:
         new_order = Order(amount, price, order_type, stop_loss, take_profit)
         self.orders.append(new_order)
         if global_settings.order_output:
-            print(str)
+            print(f"{str} {lots} sl: {stop_loss} tp: {take_profit}")
         return new_order
 
     def buy(self, lots, sl=0, tp=0):
@@ -396,7 +407,6 @@ class Simulation:
     def record(self):
         if global_settings.record_balance:
             self.balance_record.append(self.balance)
-        pass
 
     def SLTP(self):
         for order_i in range(len(self.orders) - 1, -1, -1):

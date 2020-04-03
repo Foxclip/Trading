@@ -14,8 +14,7 @@ def simple_deriv(lst):
 
 def plot_balance(diff=False, resolution=10):
     for sim in simulation.simulations:
-        record = sim.balance_record
-        balance_record = simulation.from_curr(record)
+        balance_record = simulation.from_curr(sim.balance_record)
         if diff:
             count = simulation.amount // resolution
             deriv = simple_deriv(balance_record)
@@ -24,6 +23,16 @@ def plot_balance(diff=False, resolution=10):
         plt.plot(balance_record, label=sim.name)
     plt.legend(loc="upper left")
     plt.show()
+
+
+def plot_orders():
+    for sim in simulation.simulations:
+        plt.plot(simulation.from_curr(simulation.global_data.price_data))
+        for order in sim.order_record:
+            type_buy = order[2] == simulation.OrderType.BUY
+            dot_color = "green" if type_buy else "red"
+            plt.scatter(order[0], order[1], color=dot_color)
+        plt.show()
 
 
 def surface_plot(x, y, z, xlabel="", ylabel=""):
