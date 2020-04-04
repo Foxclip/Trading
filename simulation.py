@@ -9,6 +9,7 @@ import multiprocessing
 import itertools
 from numba import njit
 import utils
+from numpy import ndarray
 
 
 simulations = []
@@ -60,7 +61,7 @@ def to_curr(object):
 def from_curr(object):
     if isinstance(object, int):
         return object / 10**global_settings.precision
-    elif isinstance(object, list):
+    elif isinstance(object, list) or isinstance(object, ndarray):
         return [x / 10**global_settings.precision for x in object]
     else:
         raise Exception(f"{type(object)} should not be in from_curr")
@@ -174,11 +175,11 @@ def create_grid(lists, f):
             f(*combination)
 
 
-def sim_list(template_list, diff=None, resolution=None, plot_type=None):
+def sim_list(template_list, diff=None, resolution=None, plot_list=["balance"]):
     # settings
-    if plot_type == "balance":
+    if "balance" in plot_list:
         global_settings.record_balance = True
-    elif plot_type == "orders":
+    if "orders" in plot_list:
         global_settings.record_orders = True
     # creating simulations
     for template in template_list:
@@ -186,11 +187,12 @@ def sim_list(template_list, diff=None, resolution=None, plot_type=None):
     # running simulations
     run_all(["name", "balance"], jobs=None)
     # plotting results
-    if "--noplot" not in sys.argv and plot_type:
-        if plot_type == "balance":
+    if "--noplot" not in sys.argv:
+        if "balance" in plot_list:
             plot.plot_balance(diff=diff, resolution=resolution)
-        elif plot_type == "orders":
-            plot.plot_orders()
+        if "orders" in plot_list:
+            plot_indicators = "indicators" in plot_list
+            plot.plot_orders(plot_indicators)
 
 
 def grid_search(f, lists, xlabel, ylabel, sorted_count=0, plot_enabled=True):
@@ -222,6 +224,7 @@ def grid_search(f, lists, xlabel, ylabel, sorted_count=0, plot_enabled=True):
 class OrderType(enum.Enum):
     BUY = 0
     SELL = 1
+    CLOSE = 2
 
 
 class Order:
@@ -281,6 +284,7 @@ class Simulation:
                  strategy=None, name="Untitled"):
         self.index = 0
         self.orders = []
+        self.indicators = {}
         self.balance_record = []
         self.order_record = []
         self.balance = to_curr(balance)
@@ -384,6 +388,9 @@ class Simulation:
         self.orders.remove(order)
         if global_settings.order_output:
             print("CLOSE")
+        if global_settings.record_orders:
+            record = (self.index, from_curr(self.price()), OrderType.CLOSE)
+            self.order_record.append(record)
 
     def advance(self):
         if self.index < len(global_data.price_data):

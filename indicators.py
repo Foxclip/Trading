@@ -2,6 +2,7 @@ import simulation
 import utils
 import numpy as np
 from numba import njit
+import matplotlib.pyplot as plt
 
 
 indicators = {}
@@ -38,7 +39,7 @@ class Indicator:
     def __init__(self):
         self.data = []
 
-    def calculate(self):
+    def plot(self):
         raise NotImplementedError()
 
 
@@ -48,6 +49,13 @@ class MovingAverage(Indicator):
         Indicator.__init__(self)
         self.length = length
         self.data = calc_ma(self.length)
+
+    def plot(self):
+        cleared_data = self.data.copy()
+        cleared_data = cleared_data[self.length - 1:]
+        x_data = list(range(self.length - 1, len(self.data)))
+        plt.plot(x_data, simulation.from_curr(cleared_data))
+        # plt.plot(simulation.from_curr(self.data))
 
 
 class MACD(Indicator):
@@ -66,10 +74,10 @@ class MACD(Indicator):
 
 @njit
 def detect_cross(lst1, lst2, offset):
-    v1 = lst1[offset - 1]
-    v2 = lst2[offset - 1]
-    v1p = lst1[offset - 2]
-    v2p = lst2[offset - 2]
+    v1 = lst1[offset]
+    v2 = lst2[offset]
+    v1p = lst1[offset - 1]
+    v2p = lst2[offset - 1]
     lst1_not_above_lst2 = v1 - v2 <= 0
     it_was_above_lst2 = v1p - v2p > 0
     lst1_not_below_lst2 = v1 - v2 >= 0
@@ -81,8 +89,8 @@ def detect_cross(lst1, lst2, offset):
 
 @njit
 def zero_cross(lst, offset):
-    v = lst[offset - 1]
-    vp = lst[offset - 2]
+    v = lst[offset]
+    vp = lst[offset - 1]
     lst1_not_above_zero = v <= 0
     it_was_above_zero = vp > 0
     lst1_not_below_zero = v >= 0

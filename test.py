@@ -40,15 +40,15 @@ class TestSimulation(unittest.TestCase):
 
     def test_small(self):
         simulation.global_settings.precision = 5
-        simulation.global_settings.amount = 2000
+        simulation.global_settings.amount = 100
         simulation.global_settings.step_output = False
         simulation.load_file("test/test_small.csv")
         main_template = {
             "balance": simulation.to_curr(100.0),
             "ignore_spread": False,
-            "sl_range": 100,
-            "tp_range": 100,
-            "ma1": 1,
+            "sl_range": 10,
+            "tp_range": 10,
+            "ma1": 5,
             "ma2": 10,
             "macd_s": 12,
             "macd_l": 26,
@@ -58,8 +58,9 @@ class TestSimulation(unittest.TestCase):
             "strategy": strategies.moving_averages,
             "name": "Untitled"
         }
-        # simulation.sim_list([main_template], plot_enabled=False)
-        simulation.sim_list([main_template], plot_type="orders")
+        plot_list = ["orders", "indicators"]
+        # plot_list = ["balance"]
+        simulation.sim_list([main_template], plot_list=plot_list)
         print(simulation.from_curr(simulation.simulations[0].balance))
 
 

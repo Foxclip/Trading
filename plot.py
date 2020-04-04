@@ -25,12 +25,20 @@ def plot_balance(diff=False, resolution=10):
     plt.show()
 
 
-def plot_orders():
+def plot_orders(plot_indicators):
     for sim in simulation.simulations:
         plt.plot(simulation.from_curr(simulation.global_data.price_data))
+        if plot_indicators:
+            for indicator in sim.indicators.values():
+                indicator.plot()
         for order in sim.order_record:
-            type_buy = order[2] == simulation.OrderType.BUY
-            dot_color = "green" if type_buy else "red"
+            dot_color = None
+            if order[2] == simulation.OrderType.BUY:
+                dot_color = "green"
+            if order[2] == simulation.OrderType.SELL:
+                dot_color = "red"
+            if order[2] == simulation.OrderType.CLOSE:
+                dot_color = "black"
             plt.scatter(order[0], order[1], color=dot_color)
         plt.show()
 
