@@ -5,6 +5,8 @@ import strategies
 
 if __name__ == "__main__":
 
+    simulation.init()
+
     # settings
     simulation.global_settings.precision = 5
     simulation.global_settings.amount = 10**6

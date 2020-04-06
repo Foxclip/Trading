@@ -3,6 +3,7 @@ from mpl_toolkits import mplot3d  # noqa
 import numpy as np
 import simulation
 import utils
+import indicators
 
 
 def simple_deriv(lst):
@@ -27,10 +28,10 @@ def plot_balance(diff=False, resolution=10):
 
 def plot_orders(plot_indicators):
     for sim in simulation.simulations:
+        indicator = list(indicators.indicators.values())[-1]
+        if plot_indicators and indicator.requires_subplot():
+            plt.subplot(211)
         plt.plot(simulation.from_curr(simulation.global_data.price_data))
-        if plot_indicators:
-            for indicator in sim.indicators.values():
-                indicator.plot()
         for order in sim.order_record:
             dot_color = None
             if order[2] == simulation.OrderType.BUY:
@@ -40,6 +41,8 @@ def plot_orders(plot_indicators):
             if order[2] == simulation.OrderType.CLOSE:
                 dot_color = "black"
             plt.scatter(order[0], order[1], color=dot_color)
+        if plot_indicators:
+            indicator.plot()
         plt.show()
 
 

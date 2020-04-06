@@ -38,6 +38,9 @@ class TestMovingAverage(unittest.TestCase):
 
 class TestSimulation(unittest.TestCase):
 
+    def setUp(self):
+        simulation.init()
+
     def test_ma(self):
         simulation.global_settings.precision = 5
         simulation.global_settings.amount = 100
@@ -58,6 +61,28 @@ class TestSimulation(unittest.TestCase):
         simulation.sim_list([template], plotting=[])
         balance = simulation.from_curr(simulation.simulations[0].balance)
         self.assertEqual(balance, 98.88)
+
+    def test_macd(self):
+        simulation.global_settings.precision = 5
+        simulation.global_settings.amount = 200
+        simulation.global_settings.step_output = False
+        simulation.load_file("test/test_small.csv")
+        template = {
+            "balance": simulation.to_curr(100.0),
+            "ignore_spread": False,
+            "sl_range": 10,
+            "tp_range": 10,
+            "macd_s": 12,
+            "macd_l": 26,
+            "macd_t": 9,
+            "leverage": 500,
+            "direction": simulation.Direction.REVERSE,
+            "strategy": strategies.macd,
+            "name": "Untitled"
+        }
+        simulation.sim_list([template], plotting=[])
+        balance = simulation.from_curr(simulation.simulations[0].balance)
+        self.assertEqual(balance, 99.44)
 
 
 if __name__ == "__main__":

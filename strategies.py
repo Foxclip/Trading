@@ -51,6 +51,10 @@ def macd(sim):
     macd = get_macd(sim.macd_s, sim.macd_l, sim.macd_t)
     sim.indicators["macd"] = macd
 
+    # skipping if moving averages are not "filled" yet
+    if sim.index < max(macd.long, macd.third) + 1:
+        return
+
     # closing all orders before the weekend
     if _weekend_close(sim):
         return

@@ -5,7 +5,7 @@ from numba import njit
 import matplotlib.pyplot as plt
 
 
-indicators = {}
+indicators = None
 
 
 def calc_ma(length, data=None):
@@ -42,6 +42,9 @@ class Indicator:
     def plot(self):
         raise NotImplementedError()
 
+    def requires_subplot(self):
+        raise NotImplementedError()
+
 
 class MovingAverage(Indicator):
 
@@ -55,7 +58,9 @@ class MovingAverage(Indicator):
         cleared_data = cleared_data[self.length - 1:]
         x_data = list(range(self.length - 1, len(self.data)))
         plt.plot(x_data, simulation.from_curr(cleared_data))
-        # plt.plot(simulation.from_curr(self.data))
+
+    def requires_subplot(self):
+        return False
 
 
 class MACD(Indicator):
@@ -70,6 +75,24 @@ class MACD(Indicator):
         short_ma[:long - 1] = np.zeros(long - 1)
         diff = long_ma - short_ma
         self.data = calc_ma(third, diff)
+
+    def plot(self):
+        cleared_data = self.data[self.long - 1:]
+        short_ma = get_ma(self.short).data
+        long_ma = get_ma(self.long).data
+        cleared_short = short_ma[self.long - 1:]
+        cleared_long = long_ma[self.long - 1:]
+        diff = cleared_long - cleared_short
+        x_data = list(range(self.long - 1, len(self.data)))
+        plt.plot(x_data, simulation.from_curr(cleared_short))
+        plt.plot(x_data, simulation.from_curr(cleared_long))
+        plt.subplot(212)
+        plt.plot([0, len(self.data) - 1], [0, 0], color="red")
+        plt.plot(x_data, simulation.from_curr(cleared_data))
+        plt.plot(x_data, simulation.from_curr(diff))
+
+    def requires_subplot(self):
+        return True
 
 
 @njit

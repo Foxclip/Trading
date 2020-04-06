@@ -10,9 +10,13 @@ import itertools
 from numba import njit
 import utils
 from numpy import ndarray
+import indicators
+import collections
 
 
-simulations = []
+simulations = None
+global_settings = None
+global_data = None
 
 
 class GlobalSettings:
@@ -27,9 +31,6 @@ class GlobalSettings:
     strategy = None
 
 
-global_settings = GlobalSettings()
-
-
 class GlobalData:
     price_data = None
     ask_data = None
@@ -40,7 +41,12 @@ class GlobalData:
     prop_list = []
 
 
-global_data = GlobalData()
+def init():
+    global simulations, global_settings, global_data
+    simulations = []
+    indicators.indicators = collections.OrderedDict()
+    global_settings = GlobalSettings()
+    global_data = GlobalData()
 
 
 @njit
