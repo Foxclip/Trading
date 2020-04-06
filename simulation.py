@@ -175,11 +175,11 @@ def create_grid(lists, f):
             f(*combination)
 
 
-def sim_list(template_list, diff=None, resolution=None, plot_list=["balance"]):
+def sim_list(template_list, diff=None, resolution=None, plotting=["balance"]):
     # settings
-    if "balance" in plot_list:
+    if "balance" in plotting:
         global_settings.record_balance = True
-    if "orders" in plot_list:
+    if "orders" in plotting:
         global_settings.record_orders = True
     # creating simulations
     for template in template_list:
@@ -188,16 +188,14 @@ def sim_list(template_list, diff=None, resolution=None, plot_list=["balance"]):
     run_all(["name", "balance"], jobs=None)
     # plotting results
     if "--noplot" not in sys.argv:
-        if "balance" in plot_list:
+        if "balance" in plotting:
             plot.plot_balance(diff=diff, resolution=resolution)
-        if "orders" in plot_list:
-            plot_indicators = "indicators" in plot_list
+        if "orders" in plotting:
+            plot_indicators = "indicators" in plotting
             plot.plot_orders(plot_indicators)
 
 
 def grid_search(f, lists, xlabel, ylabel, sorted_count=0, plot_enabled=True):
-    # settings
-    global_settings.record_balance = False
     # creating simulations
     create_grid(lists, f)
     # running simulations

@@ -38,32 +38,27 @@ class TestMovingAverage(unittest.TestCase):
 
 class TestSimulation(unittest.TestCase):
 
-    def test_small(self):
+    def test_ma(self):
         simulation.global_settings.precision = 5
         simulation.global_settings.amount = 100
         simulation.global_settings.step_output = False
         simulation.load_file("test/test_small.csv")
-        main_template = {
+        template = {
             "balance": simulation.to_curr(100.0),
             "ignore_spread": False,
             "sl_range": 10,
             "tp_range": 10,
             "ma1": 5,
             "ma2": 10,
-            "macd_s": 12,
-            "macd_l": 26,
-            "macd_t": 9,
             "leverage": 500,
             "direction": simulation.Direction.REVERSE,
             "strategy": strategies.moving_averages,
             "name": "Untitled"
         }
-        plot_list = ["orders", "indicators"]
-        # plot_list = ["balance"]
-        simulation.sim_list([main_template], plot_list=plot_list)
-        print(simulation.from_curr(simulation.simulations[0].balance))
+        simulation.sim_list([template], plotting=[])
+        balance = simulation.from_curr(simulation.simulations[0].balance)
+        self.assertEqual(balance, 98.88)
 
 
 if __name__ == "__main__":
-    # unittest.main(buffer=True)
-    unittest.main(buffer=False)
+    unittest.main(buffer=True)
