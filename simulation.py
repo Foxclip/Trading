@@ -135,6 +135,7 @@ def add_from_template(template):
 
 def _global_init(p_global_settings, p_global_data):
     print(f"Starting process {multiprocessing.current_process().name}")
+    init()
     global global_settings, global_data
     global_settings = p_global_settings
     global_data = p_global_data
