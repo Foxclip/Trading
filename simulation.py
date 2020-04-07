@@ -28,7 +28,6 @@ class GlobalSettings:
     neg_balance = True
     lot_size = 100000
     record_balance = True
-    strategy = None
 
 
 class GlobalData:
