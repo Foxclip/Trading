@@ -181,7 +181,7 @@ def create_grid(lists, f):
             f(*combination)
 
 
-def sim_list(template_list, diff=None, resolution=None, plotting=["balance"]):
+def sim_list(template_list, diff=False, resolution=10, plotting=["balance"]):
     # settings
     if "balance" in plotting:
         global_settings.record_balance = True

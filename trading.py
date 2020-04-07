@@ -31,7 +31,7 @@ if __name__ == "__main__":
         "name": "Untitled"
     }
 
-    simulation.sim_list([main_template])
+    simulation.sim_list([main_template], diff=True)
 
     # # creating simulations
     # def create_sim(ma1, ma2):

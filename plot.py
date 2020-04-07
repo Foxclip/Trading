@@ -6,19 +6,12 @@ import utils
 import indicators
 
 
-def simple_deriv(lst):
-    deriv_lst = []
-    for i in range(len(lst) - 1):
-        deriv_lst.append(lst[i + 1] - lst[i])
-    return deriv_lst
-
-
-def plot_balance(diff=False, resolution=10):
+def plot_balance(diff=None, resolution=None):
     for sim in simulation.simulations:
         balance_record = simulation.from_curr(sim.balance_record)
         if diff:
-            count = simulation.amount // resolution
-            deriv = simple_deriv(balance_record)
+            count = simulation.global_settings.amount // resolution
+            deriv = np.diff(balance_record)
             balance_record = utils.moving_average(deriv, count)
             plt.plot([0, len(balance_record)], [0, 0], color="red")
         plt.plot(balance_record, label=sim.name)
