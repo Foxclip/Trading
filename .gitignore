@@ -133,7 +133,14 @@ dmypy.json
 
 
 
-*.csv
-*.png
+# csv files in main folder
+/*.csv
+
+# generated csv files
+*_gen.csv
+
+# cprofile files
 *.cprof
+
+*.png
 output.txt
