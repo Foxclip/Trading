@@ -198,7 +198,7 @@ def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
         open("balance.txt", "w")
         file = open("balance.txt", "a")
         for sim in simulations:
-            file.write(f"{sim.ma1} {sim.ma2}\n")
+            file.write(f"ma {sim.ma1} {sim.ma2}\n")
             for item in sim.balance_record:
                 file.write(str(item) + "\n")
         file.close()
@@ -248,6 +248,22 @@ def grid_search_mas(p_template, count1, count2):
         "ma1", "ma2",
         sorted_count=10
     )
+
+
+def save_mas(main_template, pairs_list):
+    template_list = []
+    for pair in pairs_list:
+        template = main_template.copy()
+        template["ma1"] = pair[0]
+        template["ma2"] = pair[1]
+        template["name"] = f"{pair[0]} {pair[1]}"
+        template_list.append(template)
+        template = main_template.copy()
+        template["ma1"] = pair[1]
+        template["ma2"] = pair[0]
+        template["name"] = f"{pair[1]} {pair[0]}"
+        template_list.append(template)
+    sim_list(template_list, diff=True, length=10000, save_balance=True)
 
 
 class OrderType(enum.Enum):

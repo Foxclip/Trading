@@ -95,6 +95,23 @@ class MACD(Indicator):
         return True
 
 
+class BalanceRecords(Indicator):
+
+    def __init__(self, filename):
+        Indicator.__init__(self)
+        self.data = {}
+        lines = []
+        with open(filename, "r") as file:
+            lines = file.readlines()
+        current_name = None
+        for line in lines:
+            if line.startswith("ma"):
+                current_name = f"{line.split()[0]} {line.split()[1]}"
+                self.data[current_name] = []
+            else:
+                self.data[current_name].append(int(line))
+
+
 @njit
 def detect_cross(lst1, lst2, offset):
     v1 = lst1[offset]
