@@ -106,10 +106,19 @@ class BalanceRecords(Indicator):
         current_name = None
         for line in lines:
             if line.startswith("ma"):
-                current_name = f"{line.split()[0]} {line.split()[1]}"
+                current_name = f"ma {line.split()[0]} {line.split()[1]}"
                 self.data[current_name] = []
             else:
                 self.data[current_name].append(int(line))
+
+    def get(filename):
+        name = f"balancerec_{filename}"
+        if name not in indicators:
+            balancerec = BalanceRecords(filename)
+            indicators[name] = balancerec
+            return balancerec
+        else:
+            return indicators[name]
 
 
 @njit

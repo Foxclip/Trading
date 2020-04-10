@@ -27,16 +27,20 @@ if __name__ == "__main__":
         "macd_t": 9,
         "leverage": 500,
         "direction": simulation.Direction.REVERSE,
-        "strategy": strategies.moving_averages,
+        "strategy": strategies.balance_records,
         "weekend_closing": False,
         "name": "Untitled"
     }
-    pairs_list = [
-        [1, 10],
-        [9, 10],
-        [15, 30],
-        [17, 37],
-        [4, 8],
-    ]
-    simulation.save_mas(main_template, pairs_list)
+
+    simulation.sim_list([main_template])
+
+    # pairs_list = [
+    #     [1, 10],
+    #     [9, 10],
+    #     [15, 30],
+    #     [17, 37],
+    #     [4, 8],
+    # ]
+    # simulation.save_mas(main_template, pairs_list)
+
     # simulation.grid_search_mas(main_template, 10, 10)

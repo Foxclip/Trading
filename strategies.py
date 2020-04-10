@@ -1,5 +1,5 @@
 from indicators import detect_cross, zero_cross
-from indicators import get_ma, get_macd
+from indicators import get_ma, get_macd, BalanceRecords
 from simulation import Direction
 
 
@@ -63,3 +63,13 @@ def macd(sim):
     cross_above, cross_below = zero_cross(macd.data, sim.index)
     if len(sim.orders) == 0:
         _trade(sim, cross_above, cross_below)
+
+
+def balance_records(sim):
+
+    # getting indicators
+    balance_records = BalanceRecords.get("balance.txt")
+
+    # closing all orders before the weekend
+    if _weekend_close(sim):
+        return
