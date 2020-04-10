@@ -181,7 +181,8 @@ def create_grid(lists, f):
             f(*combination)
 
 
-def sim_list(template_list, diff=False, resolution=10, plotting=["balance"]):
+def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
+             save_balance=False):
     # settings
     if "balance" in plotting:
         global_settings.record_balance = True
@@ -192,10 +193,19 @@ def sim_list(template_list, diff=False, resolution=10, plotting=["balance"]):
         add_from_template(template)
     # running simulations
     run_all(["name", "balance"], jobs=None)
+    # saving balance
+    if save_balance:
+        open("balance.txt", "w")
+        file = open("balance.txt", "a")
+        for sim in simulations:
+            file.write(f"{sim.ma1} {sim.ma2}\n")
+            for item in sim.balance_record:
+                file.write(str(item) + "\n")
+        file.close()
     # plotting results
     if "--noplot" not in sys.argv:
         if "balance" in plotting:
-            plot.plot_balance(diff=diff, resolution=resolution)
+            plot.plot_balance(diff=diff, length=length)
         if "orders" in plotting:
             plot_indicators = "indicators" in plotting
             plot.plot_orders(plot_indicators)

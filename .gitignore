@@ -144,3 +144,4 @@ dmypy.json
 
 *.png
 output.txt
+balance.txt

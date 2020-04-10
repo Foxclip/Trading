@@ -6,13 +6,12 @@ import utils
 import indicators
 
 
-def plot_balance(diff=None, resolution=None):
+def plot_balance(diff=None, length=None):
     for sim in simulation.simulations:
         balance_record = simulation.from_curr(sim.balance_record)
         if diff:
-            count = simulation.global_settings.amount // resolution
             deriv = np.diff(balance_record)
-            balance_record = utils.moving_average(deriv, count)
+            balance_record = utils.moving_average(deriv, length)
             plt.plot([0, len(balance_record)], [0, 0], color="red")
         plt.plot(balance_record, label=sim.name)
     plt.legend(loc="upper left")
