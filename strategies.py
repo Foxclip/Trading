@@ -73,3 +73,5 @@ def balance_records(sim):
     # closing all orders before the weekend
     if _weekend_close(sim):
         return
+
+    best = balance_records.get_best(10000)

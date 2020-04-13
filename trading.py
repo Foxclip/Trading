@@ -1,7 +1,4 @@
 import simulation
-from simulation import to_curr
-import strategies
-
 
 if __name__ == "__main__":
 
@@ -15,22 +12,8 @@ if __name__ == "__main__":
     simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
 
     # creating simulations
-    main_template = {
-        "balance": to_curr(100.0),
-        "ignore_spread": False,
-        "sl_range": 400,
-        "tp_range": 100,
-        "ma1": 1,
-        "ma2": 10,
-        "macd_s": 12,
-        "macd_l": 26,
-        "macd_t": 9,
-        "leverage": 500,
-        "direction": simulation.Direction.REVERSE,
-        "strategy": strategies.balance_records,
-        "weekend_closing": False,
-        "name": "Untitled"
-    }
+    import templates
+    main_template = templates.balance_records
 
     simulation.sim_list([main_template])
 

@@ -106,7 +106,7 @@ class BalanceRecords(Indicator):
         current_name = None
         for line in lines:
             if line.startswith("ma"):
-                current_name = f"ma {line.split()[0]} {line.split()[1]}"
+                current_name = f"ma {line.split()[1]} {line.split()[2]}"
                 self.data[current_name] = []
             else:
                 self.data[current_name].append(int(line))
@@ -119,6 +119,22 @@ class BalanceRecords(Indicator):
             return balancerec
         else:
             return indicators[name]
+
+    def get_best(self, length):
+        averages = {}
+        for ind_name in self.data:
+            balance_record = self.data[ind_name]
+            balance_record_cut = balance_record[-length * 2:]
+            diff = np.diff(balance_record_cut)
+            avg_diff = utils.moving_average(diff, length)
+            avg_diff_cut = avg_diff[-length:]
+            # plt.plot(balance_record)
+            plt.plot(avg_diff_cut)
+            averages[ind_name] = np.mean(avg_diff_cut)
+        plt.show()
+        print(averages)
+        import sys
+        sys.exit(0)
 
 
 @njit
