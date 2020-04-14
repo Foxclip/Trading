@@ -263,7 +263,7 @@ def save_mas(main_template, pairs_list):
         template["ma2"] = pair[0]
         template["name"] = f"{pair[1]} {pair[0]}"
         template_list.append(template)
-    sim_list(template_list, diff=True, length=10000, save_balance=True)
+    sim_list(template_list, save_balance=True, plotting=[])
 
 
 class OrderType(enum.Enum):
