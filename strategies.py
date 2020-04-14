@@ -67,6 +67,10 @@ def macd(sim):
 
 def balance_records(sim):
 
+    # skipping if moving averages are not "filled" yet
+    if sim.index < 20000:
+        return
+
     # getting indicators
     balance_records = BalanceRecords.get("balance.txt")
 
@@ -74,4 +78,6 @@ def balance_records(sim):
     if _weekend_close(sim):
         return
 
-    best = balance_records.get_best(10000)
+    best = balance_records.get_best(10000, sim.index)
+    if sim.index % 1000 == 0:
+        print(f"{sim.index} {best}")

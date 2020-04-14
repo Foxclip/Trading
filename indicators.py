@@ -120,21 +120,23 @@ class BalanceRecords(Indicator):
         else:
             return indicators[name]
 
-    def get_best(self, length):
+    def get_best(self, length, offset):
         averages = {}
         for ind_name in self.data:
             balance_record = self.data[ind_name]
-            balance_record_cut = balance_record[-length * 2:]
+            start = -length * 2 + offset
+            end = start + length * 2
+            balance_record_cut = balance_record[start:end]
             diff = np.diff(balance_record_cut)
             avg_diff = utils.moving_average(diff, length)
             avg_diff_cut = avg_diff[-length:]
-            # plt.plot(balance_record)
-            plt.plot(avg_diff_cut)
+            # plt.plot(avg_diff_cut)
             averages[ind_name] = np.mean(avg_diff_cut)
-        plt.show()
-        print(averages)
-        import sys
-        sys.exit(0)
+        # plt.show()
+        # import sys
+        # sys.exit()
+        best = max(averages, key=averages.get)
+        return best
 
 
 @njit
