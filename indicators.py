@@ -100,6 +100,7 @@ class BalanceRecords(Indicator):
     def __init__(self, filename):
         Indicator.__init__(self)
         self.data = {}
+        # readin file
         lines = []
         with open(filename, "r") as file:
             lines = file.readlines()
@@ -121,21 +122,14 @@ class BalanceRecords(Indicator):
             return indicators[name]
 
     def get_best(self, length, offset):
-        averages = {}
+        increase = {}
         for ind_name in self.data:
             balance_record = self.data[ind_name]
-            start = -length * 2 + offset
-            end = start + length * 2
-            balance_record_cut = balance_record[start:end]
-            diff = np.diff(balance_record_cut)
-            avg_diff = utils.moving_average(diff, length)
-            avg_diff_cut = avg_diff[-length:]
-            # plt.plot(avg_diff_cut)
-            averages[ind_name] = np.mean(avg_diff_cut)
-        # plt.show()
-        # import sys
-        # sys.exit()
-        best = max(averages, key=averages.get)
+            start_point = offset - length
+            end_point = offset
+            diff = balance_record[end_point] - balance_record[start_point]
+            increase[ind_name] = diff
+        best = max(increase, key=increase.get)
         return best
 
 

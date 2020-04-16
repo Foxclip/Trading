@@ -68,7 +68,7 @@ def macd(sim):
 def balance_records(sim):
 
     # skipping if moving averages are not "filled" yet
-    if sim.index < 20000:
+    if sim.index < 10000:
         return
 
     # getting indicators
