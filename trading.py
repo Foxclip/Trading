@@ -2,5 +2,9 @@ import scenarios
 
 if __name__ == "__main__":
 
-    scenarios.save_balancerec()
-    scenarios.balancerec_strat()
+    amount = 10**5
+
+    scenarios.save_balancerec(amount)
+    # scenarios.balancerec_strat(amount)
+
+    scenarios.balancerec_strat_cmp(amount)

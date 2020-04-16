@@ -68,7 +68,7 @@ def macd(sim):
 def balance_records(sim):
 
     # skipping if moving averages are not "filled" yet
-    if sim.index < 10000:
+    if sim.index < sim.brlen:
         return
 
     # getting indicators
@@ -78,6 +78,9 @@ def balance_records(sim):
     if _weekend_close(sim):
         return
 
-    best = balance_records.get_best(10000, sim.index)
-    if sim.index % 1000 == 0:
-        print(f"{sim.index} {best}")
+    best = balance_records.get_best(sim.brlen, sim.index)
+    ma1 = best.split()[1]
+    ma2 = best.split()[2]
+    sim.ma1 = int(ma1)
+    sim.ma2 = int(ma2)
+    moving_averages(sim)
