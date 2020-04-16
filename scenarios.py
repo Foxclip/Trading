@@ -32,7 +32,7 @@ def balancerec_strat(amount):
     print()
 
 
-def save_balancerec(amount):
+def save_balancerec(amount, plot_balance=False):
     startup(amount)
     template = {
         "balance": simulation.to_curr(100.0),
@@ -57,7 +57,7 @@ def save_balancerec(amount):
         [17, 37],
         [4, 8],
     ]
-    simulation.save_mas(template, pairs_list)
+    simulation.save_mas(template, pairs_list, plot_balance=plot_balance)
     print()
 
 
