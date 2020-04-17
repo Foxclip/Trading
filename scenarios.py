@@ -2,15 +2,38 @@ import simulation
 import strategies
 
 
-def startup(amount):
+def startup(amount, filename):
     simulation.init()
     simulation.global_settings.precision = 5
     simulation.global_settings.amount = amount
-    simulation.load_file("EURUSD_i_M1_201706131104_202002240839.csv")
+    simulation.load_file(filename)
+
+
+def simple_ma(amount):
+    startup(amount, "EURUSD_M1_199901041022_202004171116.csv")
+    template = {
+        "balance": simulation.to_curr(100.0),
+        "ignore_spread": False,
+        "sl_range": 400,
+        "tp_range": 100,
+        "ma1": 1,
+        "ma2": 10,
+        "macd_s": 12,
+        "macd_l": 26,
+        "macd_t": 9,
+        "leverage": 500,
+        "direction": simulation.Direction.REVERSE,
+        "strategy": strategies.moving_averages,
+        "weekend_closing": False,
+        "brlen": 10000,
+        "name": "Untitled"
+    }
+    simulation.sim_list([template])
+    print()
 
 
 def balancerec_strat(amount):
-    startup(amount)
+    startup(amount, "EURUSD_i_M1_201706131104_202002240839.csv")
     template = {
         "balance": simulation.to_curr(100.0),
         "ignore_spread": False,
@@ -33,7 +56,7 @@ def balancerec_strat(amount):
 
 
 def save_balancerec(amount, plot_balance=False):
-    startup(amount)
+    startup(amount, "EURUSD_i_M1_201706131104_202002240839.csv")
     template = {
         "balance": simulation.to_curr(100.0),
         "ignore_spread": False,
@@ -62,7 +85,7 @@ def save_balancerec(amount, plot_balance=False):
 
 
 def balancerec_strat_cmp(amount):
-    startup(amount)
+    startup(amount, "EURUSD_i_M1_201706131104_202002240839.csv")
     main_template = {
         "balance": simulation.to_curr(100.0),
         "ignore_spread": False,
