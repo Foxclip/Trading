@@ -21,6 +21,7 @@ global_data = None
 
 class GlobalSettings:
     precision = 5
+    skip = 0
     amount = 1000000
     step_output = False
     order_output = False
@@ -103,7 +104,10 @@ def generate_file(path, df):
     df = df.filter(["<CLOSE>", "ASK", "BID", "DAYOFWEEK", "HOUR", "MINUTE"])
     print("Saving to file")
     df.to_csv(path, index=False, sep="\t")
-    return df
+    start = global_settings.skip
+    end = start + global_settings.amount
+    df_part = df[start:end]
+    return df_part
 
 
 def load_file(path):
@@ -111,18 +115,21 @@ def load_file(path):
     path_name, path_ext = os.path.splitext(path)
     generated_path = f"{path_name}_gen{path_ext}"
     df = None
+    skip = global_settings.skip
+    amount = global_settings.amount
     try:
-        df = pd.read_csv(generated_path, sep="\t")
+        col_row = pd.read_csv(generated_path, sep="\t", nrows=0)
+        df = pd.read_csv(generated_path, sep="\t", skiprows=skip, nrows=amount)
+        df.columns = col_row.columns
     except FileNotFoundError:
         df = pd.read_csv(path, sep="\t")
         df = generate_file(generated_path, df)
-    amount = global_settings.amount
-    global_data.price_data = to_curr(list(df["<CLOSE>"]))[-amount:]
-    global_data.ask_data = to_curr(list(df["ASK"])[-amount:])
-    global_data.bid_data = to_curr(list(df["BID"])[-amount:])
-    global_data.dayofweek_data = list(df["DAYOFWEEK"])[-amount:]
-    global_data.hour_data = list(df["HOUR"])[-amount:]
-    global_data.minute_data = list(df["MINUTE"])[-amount:]
+    global_data.price_data = to_curr(list(df["<CLOSE>"]))
+    global_data.ask_data = to_curr(list(df["ASK"]))
+    global_data.bid_data = to_curr(list(df["BID"]))
+    global_data.dayofweek_data = list(df["DAYOFWEEK"])
+    global_data.hour_data = list(df["HOUR"])
+    global_data.minute_data = list(df["MINUTE"])
 
 
 def add_from_template(template):

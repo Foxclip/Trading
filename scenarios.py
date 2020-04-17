@@ -2,15 +2,26 @@ import simulation
 import strategies
 
 
-def startup(amount, filename):
+def startup(skip, amount, filename):
     simulation.init()
     simulation.global_settings.precision = 5
+    simulation.global_settings.skip = skip
     simulation.global_settings.amount = amount
     simulation.load_file(filename)
 
 
+def smallfile(amount):
+    skip = 1000000 - amount
+    startup(skip, amount, "EURUSD_i_M1_201706131104_202002240839.csv")
+
+
+def bigfile(amount):
+    skip = 7649335 - amount
+    startup(skip, amount, "EURUSD_M1_199901041022_202004171116.csv")
+
+
 def simple_ma(amount):
-    startup(amount, "EURUSD_M1_199901041022_202004171116.csv")
+    bigfile(amount)
     template = {
         "balance": simulation.to_curr(100.0),
         "ignore_spread": False,
@@ -33,7 +44,7 @@ def simple_ma(amount):
 
 
 def balancerec_strat(amount):
-    startup(amount, "EURUSD_i_M1_201706131104_202002240839.csv")
+    bigfile(amount)
     template = {
         "balance": simulation.to_curr(100.0),
         "ignore_spread": False,
@@ -56,7 +67,7 @@ def balancerec_strat(amount):
 
 
 def save_balancerec(amount, plot_balance=False):
-    startup(amount, "EURUSD_i_M1_201706131104_202002240839.csv")
+    bigfile(amount)
     template = {
         "balance": simulation.to_curr(100.0),
         "ignore_spread": False,
@@ -85,7 +96,7 @@ def save_balancerec(amount, plot_balance=False):
 
 
 def balancerec_strat_cmp(amount):
-    startup(amount, "EURUSD_i_M1_201706131104_202002240839.csv")
+    bigfile(amount)
     main_template = {
         "balance": simulation.to_curr(100.0),
         "ignore_spread": False,
