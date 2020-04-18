@@ -22,3 +22,6 @@ ma = main.copy()
 
 balancerec = main.copy()
 balancerec["strategy"] = strategies.balance_records
+
+balancetime = main.copy()
+balancetime["strategy"] = strategies.balancetime

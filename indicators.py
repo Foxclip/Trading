@@ -100,7 +100,7 @@ class BalanceRecords(Indicator):
     def __init__(self, filename):
         Indicator.__init__(self)
         self.data = {}
-        # readin file
+        # reading file
         lines = []
         with open(filename, "r") as file:
             lines = file.readlines()
@@ -108,6 +108,9 @@ class BalanceRecords(Indicator):
         for line in lines:
             if line.startswith("ma"):
                 current_name = f"ma {line.split()[1]} {line.split()[2]}"
+                self.data[current_name] = []
+            elif line.startswith("time"):
+                current_name = f"time {line.split()[1]}"
                 self.data[current_name] = []
             else:
                 self.data[current_name].append(int(line))

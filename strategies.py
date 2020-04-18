@@ -72,7 +72,7 @@ def balance_records(sim):
         return
 
     # getting indicators
-    balance_records = BalanceRecords.get(sim.recordfile)
+    balance_records = BalanceRecords.get(sim.ma_record)
 
     # closing all orders before the weekend
     if _weekend_close(sim):
@@ -81,6 +81,30 @@ def balance_records(sim):
     best = balance_records.get_best(sim.brlen, sim.index)
     ma1 = best.split()[1]
     ma2 = best.split()[2]
+    sim.ma1 = int(ma1)
+    sim.ma2 = int(ma2)
+    moving_averages(sim)
+
+
+def balancetime(sim):
+
+    # skipping if moving averages are not "filled" yet
+    if sim.index < sim.brlen:
+        return
+
+    # getting indicators
+    ma_record = BalanceRecords.get(sim.ma_record)
+    br_record = BalanceRecords.get(sim.br_record)
+
+    # closing all orders before the weekend
+    if _weekend_close(sim):
+        return
+
+    best_br = br_record.get_best(sim.brlen, sim.index)
+    best_time = int(best_br.split()[1])
+    best_ma = ma_record.get_best(best_time, sim.index)
+    ma1 = best_ma.split()[1]
+    ma2 = best_ma.split()[2]
     sim.ma1 = int(ma1)
     sim.ma2 = int(ma2)
     moving_averages(sim)
