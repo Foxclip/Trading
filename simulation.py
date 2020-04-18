@@ -242,21 +242,6 @@ def grid_search(f, lists, xlabel, ylabel, sorted_count=0, plot_enabled=True):
                                   xlabel=xlabel, ylabel=ylabel)
 
 
-def grid_search_mas(p_template, count1, count2):
-    def create_sim(ma1, ma2):
-        template = p_template.copy()
-        template["name"] = f"{ma1} {ma2}"
-        template["ma1"] = ma1
-        template["ma2"] = ma2
-        add_from_template(template)
-    grid_search(
-        create_sim,
-        [list(range(1, count1 + 1)), list(range(1, count2 + 1))],
-        "ma1", "ma2",
-        sorted_count=10
-    )
-
-
 class OrderType(enum.Enum):
     BUY = 0
     SELL = 1

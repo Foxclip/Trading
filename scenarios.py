@@ -26,6 +26,26 @@ def simple_ma(amount):
     print()
 
 
+def grid_search_mas(amount, count1, count2):
+
+    bigfile(amount)
+    main_template = templates.ma
+
+    def create_sim(ma1, ma2):
+        template = main_template.copy()
+        template["name"] = f"{ma1} {ma2}"
+        template["ma1"] = ma1
+        template["ma2"] = ma2
+        simulation.add_from_template(template)
+
+    simulation.grid_search(
+        create_sim,
+        [list(range(1, count1 + 1)), list(range(1, count2 + 1))],
+        "ma1", "ma2",
+        sorted_count=10
+    )
+
+
 def balancerec_strat(amount):
     bigfile(amount)
     simulation.sim_list([templates.balancerec])
