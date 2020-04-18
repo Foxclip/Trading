@@ -257,23 +257,6 @@ def grid_search_mas(p_template, count1, count2):
     )
 
 
-def save_mas(main_template, pairs_list, plot_balance=False):
-    template_list = []
-    for pair in pairs_list:
-        template = main_template.copy()
-        template["ma1"] = pair[0]
-        template["ma2"] = pair[1]
-        template["name"] = f"ma {pair[0]} {pair[1]}"
-        template_list.append(template)
-        template = main_template.copy()
-        template["ma1"] = pair[1]
-        template["ma2"] = pair[0]
-        template["name"] = f"ma {pair[1]} {pair[0]}"
-        template_list.append(template)
-    plotting = ["balance"] if plot_balance else []
-    sim_list(template_list, save_filename="balance.txt", plotting=plotting)
-
-
 class OrderType(enum.Enum):
     BUY = 0
     SELL = 1

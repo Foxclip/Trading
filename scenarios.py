@@ -41,7 +41,22 @@ def save_balancerec(amount, plot_balance=False):
         [17, 37],
         [4, 8],
     ]
-    simulation.save_mas(templates.ma, pairs_list, plot_balance=plot_balance)
+    main_template = templates.ma
+    template_list = []
+    for pair in pairs_list:
+        template = main_template.copy()
+        template["ma1"] = pair[0]
+        template["ma2"] = pair[1]
+        template["name"] = f"ma {pair[0]} {pair[1]}"
+        template_list.append(template)
+        template = main_template.copy()
+        template["ma1"] = pair[1]
+        template["ma2"] = pair[0]
+        template["name"] = f"ma {pair[1]} {pair[0]}"
+        template_list.append(template)
+    plotting = ["balance"] if plot_balance else []
+    simulation.sim_list(template_list, save_filename="balance.txt",
+                        plotting=plotting)
     print()
 
 
