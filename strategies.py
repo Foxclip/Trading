@@ -72,7 +72,7 @@ def balance_records(sim):
         return
 
     # getting indicators
-    balance_records = BalanceRecords.get("balance.txt")
+    balance_records = BalanceRecords.get(sim.recordfile)
 
     # closing all orders before the weekend
     if _weekend_close(sim):

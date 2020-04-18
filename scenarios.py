@@ -75,12 +75,12 @@ def save_balancerec(amount, plot_balance=False):
         template["name"] = f"ma {pair[1]} {pair[0]}"
         template_list.append(template)
     plotting = ["balance"] if plot_balance else []
-    simulation.sim_list(template_list, save_filename="balance.txt",
+    simulation.sim_list(template_list, save_filename="ma_balance.txt",
                         plotting=plotting)
     print()
 
 
-def balancerec_strat_cmp(amount):
+def balancerec_strat_cmp(amount, plot_balance=False):
     bigfile(amount)
     template = templates.balancerec
     brlens = [i * 1000 for i in range(5, 21)]
@@ -89,6 +89,9 @@ def balancerec_strat_cmp(amount):
         template = template.copy()
         template["brlen"] = brlen
         template["name"] = f"{brlen}"
+        template["recordfile"] = "ma_balance.txt"
         template_list.append(template)
-    simulation.sim_list(template_list)
+    plotting = ["balance"] if plot_balance else []
+    simulation.sim_list(template_list, save_filename="br_balance.txt",
+                        plotting=plotting)
     print()

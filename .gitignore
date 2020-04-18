@@ -143,5 +143,4 @@ dmypy.json
 *.cprof
 
 *.png
-output.txt
-balance.txt
+*.txt
