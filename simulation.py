@@ -189,7 +189,7 @@ def create_grid(lists, f):
 
 
 def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
-             save_balance=False):
+             save_filename=None):
     # settings
     if "balance" in plotting:
         global_settings.record_balance = True
@@ -201,11 +201,11 @@ def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
     # running simulations
     run_all(["name", "balance"], jobs=None)
     # saving balance
-    if save_balance:
-        open("balance.txt", "w")
-        file = open("balance.txt", "a")
+    if save_filename:
+        open(save_filename, "w")
+        file = open(save_filename, "a")
         for sim in simulations:
-            file.write(f"ma {sim.ma1} {sim.ma2}\n")
+            file.write(f"{sim.name}\n")
             for item in sim.balance_record:
                 file.write(str(item) + "\n")
         file.close()
@@ -263,15 +263,15 @@ def save_mas(main_template, pairs_list, plot_balance=False):
         template = main_template.copy()
         template["ma1"] = pair[0]
         template["ma2"] = pair[1]
-        template["name"] = f"{pair[0]} {pair[1]}"
+        template["name"] = f"ma {pair[0]} {pair[1]}"
         template_list.append(template)
         template = main_template.copy()
         template["ma1"] = pair[1]
         template["ma2"] = pair[0]
-        template["name"] = f"{pair[1]} {pair[0]}"
+        template["name"] = f"ma {pair[1]} {pair[0]}"
         template_list.append(template)
     plotting = ["balance"] if plot_balance else []
-    sim_list(template_list, save_balance=True, plotting=plotting)
+    sim_list(template_list, save_filename="balance.txt", plotting=plotting)
 
 
 class OrderType(enum.Enum):
