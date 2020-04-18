@@ -1,5 +1,5 @@
 import simulation
-import strategies
+import templates
 
 
 def startup(skip, amount, filename):
@@ -22,68 +22,18 @@ def bigfile(amount):
 
 def simple_ma(amount):
     bigfile(amount)
-    template = {
-        "balance": simulation.to_curr(100.0),
-        "ignore_spread": False,
-        "sl_range": 400,
-        "tp_range": 100,
-        "ma1": 1,
-        "ma2": 10,
-        "macd_s": 12,
-        "macd_l": 26,
-        "macd_t": 9,
-        "leverage": 500,
-        "direction": simulation.Direction.REVERSE,
-        "strategy": strategies.moving_averages,
-        "weekend_closing": False,
-        "brlen": 10000,
-        "name": "Untitled"
-    }
-    simulation.sim_list([template])
+    simulation.sim_list([templates.ma])
     print()
 
 
 def balancerec_strat(amount):
     bigfile(amount)
-    template = {
-        "balance": simulation.to_curr(100.0),
-        "ignore_spread": False,
-        "sl_range": 400,
-        "tp_range": 100,
-        "ma1": 1,
-        "ma2": 10,
-        "macd_s": 12,
-        "macd_l": 26,
-        "macd_t": 9,
-        "leverage": 500,
-        "direction": simulation.Direction.REVERSE,
-        "strategy": strategies.balance_records,
-        "weekend_closing": False,
-        "brlen": 10000,
-        "name": "Untitled"
-    }
-    simulation.sim_list([template])
+    simulation.sim_list([templates.balancerec])
     print()
 
 
 def save_balancerec(amount, plot_balance=False):
     bigfile(amount)
-    template = {
-        "balance": simulation.to_curr(100.0),
-        "ignore_spread": False,
-        "sl_range": 400,
-        "tp_range": 100,
-        "ma1": 1,
-        "ma2": 10,
-        "macd_s": 12,
-        "macd_l": 26,
-        "macd_t": 9,
-        "leverage": 500,
-        "direction": simulation.Direction.REVERSE,
-        "strategy": strategies.moving_averages,
-        "weekend_closing": False,
-        "name": "Untitled"
-    }
     pairs_list = [
         [1, 10],
         [9, 10],
@@ -91,35 +41,19 @@ def save_balancerec(amount, plot_balance=False):
         [17, 37],
         [4, 8],
     ]
-    simulation.save_mas(template, pairs_list, plot_balance=plot_balance)
+    simulation.save_mas(templates.ma, pairs_list, plot_balance=plot_balance)
     print()
 
 
 def balancerec_strat_cmp(amount):
     bigfile(amount)
-    main_template = {
-        "balance": simulation.to_curr(100.0),
-        "ignore_spread": False,
-        "sl_range": 400,
-        "tp_range": 100,
-        "ma1": 1,
-        "ma2": 10,
-        "macd_s": 12,
-        "macd_l": 26,
-        "macd_t": 9,
-        "leverage": 500,
-        "direction": simulation.Direction.REVERSE,
-        "strategy": strategies.balance_records,
-        "weekend_closing": False,
-        "brlen": 10000,
-        "name": "Untitled"
-    }
+    template = templates.balancerec
     brlens = [i * 1000 for i in range(5, 21)]
-    templates = []
+    template_list = []
     for brlen in brlens:
-        template = main_template.copy()
+        template = template.copy()
         template["brlen"] = brlen
         template["name"] = f"{brlen}"
-        templates.append(template)
-    simulation.sim_list(templates)
+        template_list.append(template)
+    simulation.sim_list(template_list)
     print()
