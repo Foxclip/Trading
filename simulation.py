@@ -12,6 +12,7 @@ import utils
 from numpy import ndarray
 import indicators
 import collections
+import numpy as np
 
 
 simulations = None
@@ -188,17 +189,30 @@ def create_grid(lists, f):
             f(*combination)
 
 
-def get_best(timeframe):
+@njit
+def argmax(lst):
+    max_value = lst[0]
+    max_index = 0
+    for index in range(len(lst)):
+        if lst[index] > max_value:
+            max_value = lst[index]
+            max_index = index
+    return max_index
+
+
+@njit
+def get_best(timeframe, price_data_len, sim_names, sim_balance_matrix):
     results = []
-    for index in range(len(global_data.price_data)):
-        increase = {}
-        for sim in simulations:
-            balance_record = sim.balance_record
+    for index in range(price_data_len):
+        increase = []
+        for sim_i in range(len(sim_names)):
+            balance_record = sim_balance_matrix[sim_i]
             start_point = index - timeframe
             end_point = index
             diff = balance_record[end_point] - balance_record[start_point]
-            increase[sim.name] = diff
-        best = max(increase, key=increase.get)
+            increase.append(diff)
+        best_index = argmax(increase)
+        best = sim_names[best_index]
         results.append(best)
     return results
 
@@ -218,12 +232,20 @@ def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
     # saving balance
     time1 = time.time()
     if save_filename and timeframe_list:
+        sim_names = [sim.name for sim in simulations]
+        sim_lists = [sim.balance_record for sim in simulations]
+        sim_balance_matrix = np.matrix(sim_lists)
         open(save_filename, "w")
         file = open(save_filename, "a")
         for timeframe in timeframe_list:
             print(f"Saving {timeframe}")
             file.write(f"{timeframe}\n")
-            results = get_best(timeframe)
+            results = get_best(
+                timeframe,
+                len(global_data.price_data),
+                utils.to_typed_list(sim_names),
+                sim_balance_matrix
+            )
             for best in results:
                 file.write(f"{best}\n")
         file.close()
