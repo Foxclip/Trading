@@ -52,7 +52,7 @@ def balancerec_strat(amount):
     print()
 
 
-def save_balancerec(amount, plot_balance=False):
+def save_balancerec(amount, plot_balance=False, diff=False):
     bigfile(amount)
     pairs_list = [
         [1, 10],
@@ -76,14 +76,33 @@ def save_balancerec(amount, plot_balance=False):
         template_list.append(template)
     plotting = ["balance"] if plot_balance else []
     simulation.sim_list(template_list, save_filename="ma_balance.txt",
-                        plotting=plotting)
+                        plotting=plotting, diff=diff)
     print()
 
 
-def balancerec_strat_cmp(amount, plot_balance=False):
+def save_balancerec_grid(amount, plot_balance=False, diff=False):
+    bigfile(amount)
+    main_template = templates.ma
+    lst1 = list(range(1, 21))
+    lst2 = list(range(1, 21))
+    template_list = []
+    for ma1 in lst1:
+        for ma2 in lst2:
+            template = main_template.copy()
+            template["ma1"] = ma1
+            template["ma2"] = ma2
+            template["name"] = f"ma {ma1} {ma2}"
+            template_list.append(template)
+    plotting = ["balance"] if plot_balance else []
+    simulation.sim_list(template_list, save_filename="ma_balance.txt",
+                        plotting=plotting, diff=diff)
+    print()
+
+
+def balancerec_strat_cmp(amount, plot_balance=False, diff=False):
     bigfile(amount)
     template = templates.balancerec
-    brlens = [i * 1000 for i in range(5, 21)]
+    brlens = [i * 1000 for i in range(1, 41)]
     template_list = []
     for brlen in brlens:
         template = template.copy()
@@ -93,14 +112,14 @@ def balancerec_strat_cmp(amount, plot_balance=False):
         template_list.append(template)
     plotting = ["balance"] if plot_balance else []
     simulation.sim_list(template_list, save_filename="br_balance.txt",
-                        plotting=plotting)
+                        plotting=plotting, diff=diff)
     print()
 
 
-def balancerec_strat_time(amount, plot_balance=False):
+def balancerec_strat_time(amount, plot_balance=False, diff=False):
     bigfile(amount)
     template = templates.balancetime
-    brlens = [i * 1000 for i in range(5, 21)]
+    brlens = [i * 1000 for i in range(1, 41)]
     # brlens = [10000]
     template_list = []
     for brlen in brlens:
@@ -111,5 +130,5 @@ def balancerec_strat_time(amount, plot_balance=False):
         template["br_record"] = "br_balance.txt"
         template_list.append(template)
     plotting = ["balance"] if plot_balance else []
-    simulation.sim_list(template_list, plotting=plotting)
+    simulation.sim_list(template_list, plotting=plotting, diff=diff)
     print()
