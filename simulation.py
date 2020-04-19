@@ -188,10 +188,22 @@ def create_grid(lists, f):
             f(*combination)
 
 
+def get_best(length, offset):
+    increase = {}
+    for sim in simulations:
+        balance_record = sim.balance_record
+        start_point = offset - length
+        end_point = offset
+        diff = balance_record[end_point] - balance_record[start_point]
+        increase[sim.name] = diff
+    best = max(increase, key=increase.get)
+    return best
+
+
 def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
-             save_filename=None):
+             save_filename=None, timeframe_list=None):
     # settings
-    if "balance" in plotting:
+    if "balance" in plotting or save_filename:
         global_settings.record_balance = True
     if "orders" in plotting:
         global_settings.record_orders = True
@@ -204,10 +216,12 @@ def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
     if save_filename:
         open(save_filename, "w")
         file = open(save_filename, "a")
-        for sim in simulations:
-            file.write(f"{sim.name}\n")
-            for item in sim.balance_record:
-                file.write(str(item) + "\n")
+        for timeframe in timeframe_list:
+            print(f"Saving {timeframe}")
+            file.write(f"{timeframe}\n")
+            for index in range(len(global_data.price_data)):
+                best = get_best(timeframe, index)
+                file.write(f"{best}\n")
         file.close()
     # plotting results
     if "--noplot" not in sys.argv:

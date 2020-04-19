@@ -124,17 +124,6 @@ class BalanceRecords(Indicator):
         else:
             return indicators[name]
 
-    def get_best(self, length, offset):
-        increase = {}
-        for ind_name in self.data:
-            balance_record = self.data[ind_name]
-            start_point = offset - length
-            end_point = offset
-            diff = balance_record[end_point] - balance_record[start_point]
-            increase[ind_name] = diff
-        best = max(increase, key=increase.get)
-        return best
-
 
 @njit
 def detect_cross(lst1, lst2, offset):

@@ -83,8 +83,8 @@ def save_balancerec(amount, plot_balance=False, diff=False):
 def save_balancerec_grid(amount, plot_balance=False, diff=False):
     bigfile(amount)
     main_template = templates.ma
-    lst1 = list(range(1, 21))
-    lst2 = list(range(1, 21))
+    lst1 = list(range(1, 41))
+    lst2 = list(range(1, 41))
     template_list = []
     for ma1 in lst1:
         for ma2 in lst2:
@@ -94,8 +94,12 @@ def save_balancerec_grid(amount, plot_balance=False, diff=False):
             template["name"] = f"ma {ma1} {ma2}"
             template_list.append(template)
     plotting = ["balance"] if plot_balance else []
-    simulation.sim_list(template_list, save_filename="ma_balance.txt",
-                        plotting=plotting, diff=diff)
+    brlens = [i * 1000 for i in range(1, 41)]
+    simulation.sim_list(
+        template_list,
+        save_filename="ma_balance.txt", timeframe_list=brlens,
+        plotting=plotting, diff=diff
+    )
     print()
 
 
