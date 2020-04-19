@@ -1,5 +1,5 @@
 from indicators import detect_cross, zero_cross
-from indicators import get_ma, get_macd, BalanceRecords
+from indicators import get_ma, get_macd, BestRecords
 from simulation import Direction
 
 
@@ -72,13 +72,13 @@ def balance_records(sim):
         return
 
     # getting indicators
-    balance_records = BalanceRecords.get(sim.ma_record)
+    marec = BestRecords.get(sim.ma_record, "ma")
 
     # closing all orders before the weekend
     if _weekend_close(sim):
         return
 
-    best = balance_records.get_best(sim.brlen, sim.index)
+    best = marec.data[sim.brlen][sim.index]
     ma1 = best.split()[1]
     ma2 = best.split()[2]
     sim.ma1 = int(ma1)
@@ -93,16 +93,16 @@ def balancetime(sim):
         return
 
     # getting indicators
-    ma_record = BalanceRecords.get(sim.ma_record)
-    br_record = BalanceRecords.get(sim.br_record)
+    ma_record = BestRecords.get(sim.ma_record, "ma")
+    br_record = BestRecords.get(sim.br_record, "time")
 
     # closing all orders before the weekend
     if _weekend_close(sim):
         return
 
-    best_br = br_record.get_best(sim.brlen, sim.index)
+    best_br = br_record.data[sim.brlen][sim.index]
     best_time = int(best_br.split()[1])
-    best_ma = ma_record.get_best(best_time, sim.index)
+    best_ma = ma_record.data[best_time][sim.index]
     ma1 = best_ma.split()[1]
     ma2 = best_ma.split()[2]
     sim.ma1 = int(ma1)

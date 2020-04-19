@@ -213,7 +213,7 @@ def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
     # running simulations
     run_all(["name", "balance"], jobs=None)
     # saving balance
-    if save_filename:
+    if save_filename and timeframe_list:
         open(save_filename, "w")
         file = open(save_filename, "a")
         for timeframe in timeframe_list:

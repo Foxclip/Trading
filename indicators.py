@@ -95,32 +95,28 @@ class MACD(Indicator):
         return True
 
 
-class BalanceRecords(Indicator):
+class BestRecords(Indicator):
 
-    def __init__(self, filename):
-        Indicator.__init__(self)
+    def __init__(self, filename, prefix):
         self.data = {}
         # reading file
         lines = []
         with open(filename, "r") as file:
             lines = file.readlines()
-        current_name = None
+        current_timeframe = None
         for line in lines:
-            if line.startswith("ma"):
-                current_name = f"ma {line.split()[1]} {line.split()[2]}"
-                self.data[current_name] = []
-            elif line.startswith("time"):
-                current_name = f"time {line.split()[1]}"
-                self.data[current_name] = []
+            if line.startswith(prefix):
+                self.data[current_timeframe].append(line)
             else:
-                self.data[current_name].append(int(line))
+                current_timeframe = int(line)
+                self.data[current_timeframe] = []
 
-    def get(filename):
-        name = f"balancerec_{filename}"
+    def get(filename, prefix):
+        name = f"marec_{filename}"
         if name not in indicators:
-            balancerec = BalanceRecords(filename)
-            indicators[name] = balancerec
-            return balancerec
+            marec = BestRecords(filename, prefix)
+            indicators[name] = marec
+            return marec
         else:
             return indicators[name]
 
