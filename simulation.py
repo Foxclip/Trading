@@ -188,16 +188,19 @@ def create_grid(lists, f):
             f(*combination)
 
 
-def get_best(length, offset):
-    increase = {}
-    for sim in simulations:
-        balance_record = sim.balance_record
-        start_point = offset - length
-        end_point = offset
-        diff = balance_record[end_point] - balance_record[start_point]
-        increase[sim.name] = diff
-    best = max(increase, key=increase.get)
-    return best
+def get_best(timeframe):
+    results = []
+    for index in range(len(global_data.price_data)):
+        increase = {}
+        for sim in simulations:
+            balance_record = sim.balance_record
+            start_point = index - timeframe
+            end_point = index
+            diff = balance_record[end_point] - balance_record[start_point]
+            increase[sim.name] = diff
+        best = max(increase, key=increase.get)
+        results.append(best)
+    return results
 
 
 def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
@@ -213,16 +216,20 @@ def sim_list(template_list, diff=False, length=10000, plotting=["balance"],
     # running simulations
     run_all(["name", "balance"], jobs=None)
     # saving balance
+    time1 = time.time()
     if save_filename and timeframe_list:
         open(save_filename, "w")
         file = open(save_filename, "a")
         for timeframe in timeframe_list:
             print(f"Saving {timeframe}")
             file.write(f"{timeframe}\n")
-            for index in range(len(global_data.price_data)):
-                best = get_best(timeframe, index)
+            results = get_best(timeframe)
+            for best in results:
                 file.write(f"{best}\n")
         file.close()
+    time2 = time.time()
+    total_time = time2 - time1
+    print(f"Saved in {total_time}s")
     # plotting results
     if "--noplot" not in sys.argv:
         if "balance" in plotting:
